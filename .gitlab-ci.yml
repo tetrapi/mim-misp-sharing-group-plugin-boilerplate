@@ -104,19 +104,6 @@ test-misp-login-200:
   before_script:
     - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
-    - |
-      for entry in \
-        "BASE_URL=https://localhost" \
-        "MODULES_COMMIT=main" \
-        "DISABLE_SSL_REDIRECT=false" \
-        "DISABLE_CA_REFRESH=false" \
-        "CRON_PULLALL=false" \
-        "CRON_PUSHALL=false" \
-        "DISABLE_IPV6=false"
-      do
-        key="${entry%%=*}"
-        grep -q "^${key}=" .env || echo "$entry" >> .env
-      done
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
