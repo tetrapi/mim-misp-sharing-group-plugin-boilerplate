@@ -104,11 +104,29 @@ test-misp-login-200:
   before_script:
     - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
+    - |
+      cat << 'EOF' >> .env
+      MODULES_COMMIT=main
+      BASE_URL=https://localhost
+      DISABLE_SSL_REDIRECT=false
+      DISABLE_CA_REFRESH=false
+      CRON_PULLALL=false
+      CRON_PUSHALL=false
+      DISABLE_IPV6=false
+      EOF
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
-    - docker compose -f docker-compose-dev.yml up -d redis db mail misp-modules
-    - docker compose -f docker-compose-dev.yml up -d misp-core
+    - docker compose --env-file .env -f docker-compose-dev.yml up -d redis db mail misp-modules
+
+    - |
+      echo "--> Waiting for misp-modules to become healthy..."
+      until [ "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}starting{{end}}' $(docker compose -f docker-compose-dev.yml ps -q misp-modules))" = "healthy" ]; do
+        echo "--> Waiting for misp-modules..."
+        sleep 3
+      done
+
+    - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
       echo "--> Waiting for misp-core container ID..."
@@ -128,6 +146,7 @@ test-misp-login-200:
           break
         elif [ "$STATUS" = "unhealthy" ]; then
           echo "--> [ERROR] misp-core container reported unhealthy status."
+          docker compose -f docker-compose-dev.yml logs misp-core
           exit 1
         fi
         sleep 5
@@ -153,7 +172,7 @@ test-misp-login-200:
       fi
 
     - echo "--> Executing plugin installer..."
-    - docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - |
       echo "--> STEP 2: Validating MISP access (with plugin installed)..."
