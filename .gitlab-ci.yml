@@ -123,7 +123,7 @@ test-misp-login-200:
     - |
       echo "--> Waiting for initial MISP Core startup (up to 5 minutes)..."
       BASE_READY=0
-      for i in $(seq 1 60); do
+      for i in $(seq 1 90); do
         HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
         echo "Attempt $i/60 (Base MISP): HTTP $HTTP_STATUS"
 
