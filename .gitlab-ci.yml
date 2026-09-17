@@ -113,6 +113,13 @@ test-misp-login-200:
       CRON_PULLALL=false
       CRON_PUSHALL=false
       DISABLE_IPV6=false
+      # Skip initial asset updates during CI runs to speed up startup drastically
+      DISABLE_UPDATE_ALL=true
+      DISABLE_UPDATE_GALAXY=true
+      DISABLE_UPDATE_TAXONOMIES=true
+      DISABLE_UPDATE_WARNINGLISTS=true
+      DISABLE_UPDATE_OBJECT_TEMPLATES=true
+      DISABLE_UPDATE_NOTICELISTS=true
       EOF
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
@@ -121,14 +128,14 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Aguardando inicializacao do MISP Core (ate 5 minutos)..."
+      echo "--> Waiting for initial MISP Core startup (up to 7.5 minutes)..."
       BASE_READY=0
-      for i in $(seq 1 60); do
+      for i in $(seq 1 90); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        echo "Tentativa $i/60 (MISP Base): HTTP $HTTP_STATUS"
+        echo "Attempt $i/90 (Base MISP): HTTP $HTTP_STATUS"
 
         if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-          echo "SUCCESS: MISP Base esta ativo e a responder com HTTP $HTTP_STATUS!"
+          echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
           BASE_READY=1
           break
         fi
@@ -136,22 +143,22 @@ test-misp-login-200:
       done
 
       if [ "$BASE_READY" -ne 1 ]; then
-        echo "ERROR: Timeout ao aguardar pela inicializacao do MISP Base."
+        echo "ERROR: Timed out waiting for Base MISP initialization."
         exit 1
       fi
 
-    - echo "--> Executando o instalador do plugin..."
+    - echo "--> Executing plugin installer..."
     - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - |
-      echo "--> Validando acesso ao MISP apos instalacao do plugin..."
+      echo "--> Validating MISP access after plugin installation..."
       PLUGIN_READY=0
       for i in $(seq 1 12); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        echo "Tentativa $i/12 (MISP + Plugin): HTTP $HTTP_STATUS"
+        echo "Attempt $i/12 (MISP + Plugin): HTTP $HTTP_STATUS"
 
         if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-          echo "SUCCESS: MISP com plugin ativo respondeu com HTTP $HTTP_STATUS!"
+          echo "SUCCESS: MISP with plugin active responded with HTTP $HTTP_STATUS!"
           PLUGIN_READY=1
           break
         fi
@@ -159,7 +166,7 @@ test-misp-login-200:
       done
 
       if [ "$PLUGIN_READY" -ne 1 ]; then
-        echo "ERROR: MISP deixou de responder apos a instalacao do plugin."
+        echo "ERROR: MISP stopped responding after plugin installation."
         exit 1
       fi
 
