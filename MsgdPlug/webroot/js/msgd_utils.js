@@ -236,6 +236,7 @@
       if (!groupIdOrUrl) return "";
 
       const targetValue = String(groupIdOrUrl).trim();
+      // eslint-disable-next-line no-control-regex
       const sanitizedCheck = targetValue.replace(/[\x00-\x20\x7F-\xFF]/g, "");
       if (/^(javascript|data|vbscript|file):/i.test(sanitizedCheck)) return "";
 
