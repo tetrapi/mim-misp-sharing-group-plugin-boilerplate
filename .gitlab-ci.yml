@@ -110,8 +110,6 @@ test-misp-login-200:
       BASE_URL=https://localhost
       DISABLE_SSL_REDIRECT=false
       DISABLE_CA_REFRESH=false
-      CRON_PULLALL=false
-      CRON_PUSHALL=false
       DISABLE_IPV6=false
       EOF
     - dos2unix msgd_installer.sh 2>/dev/null || true
@@ -121,11 +119,11 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for initial MISP Core startup (up to 5 minutes)..."
+      echo "--> Waiting for initial MISP Core startup (up to 7.5 minutes)..."
       BASE_READY=0
       for i in $(seq 1 90); do
         HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        echo "Attempt $i/60 (Base MISP): HTTP $HTTP_STATUS"
+        echo "Attempt $i/90 (Base MISP): HTTP $HTTP_STATUS"
 
         if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
           echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
