@@ -17,7 +17,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
 # ==============================================================================
-# INCLUDES: Templates Oficiais de Segurança do GitLab
+# INCLUDES: Official GitLab Security Templates
 # ==============================================================================
 include:
   - template: Jobs/SAST.gitlab-ci.yml
@@ -49,7 +49,7 @@ dependency_scanning:
   needs: []
 
 # ==============================================================================
-# STAGE 1: test - Qualidade de Código, Linters e Formatação
+# STAGE 1: test - Code Quality, Linters & Formatting
 # ==============================================================================
 
 shellcheck:
@@ -89,7 +89,7 @@ prettier:
     - npx prettier --check MsgdPlug/webroot/js/ || true
 
 # ==============================================================================
-# STAGE 2: integration - Teste da Stack MISP + Plugin
+# STAGE 2: integration - MISP Stack + Plugin Integration Test
 # ==============================================================================
 
 test-misp-login-200:
@@ -107,35 +107,35 @@ test-misp-login-200:
     - docker compose -f docker-compose-dev.yml up -d
 
     - |
-      echo "Aguardando o container misp-core inicializar..."
+      echo "Waiting for misp-core container to initialize..."
       until docker compose -f docker-compose-dev.yml exec -T misp-core true 2>/dev/null; do
         sleep 2
       done
 
-      echo "Copiando msgd_installer.sh para dentro do container..."
+      echo "Copying msgd_installer.sh into container..."
       docker compose -f docker-compose-dev.yml cp ./msgd_installer.sh misp-core:/var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core chmod +x /var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - |
-      echo "Testando endpoint: https://localhost/users/login..."
+      echo "Testing endpoint: https://localhost/users/login..."
       for i in $(seq 1 36); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
         if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCESSO: /users/login respondeu HTTP 200!"
+          echo "SUCCESS: /users/login returned HTTP 200!"
           exit 0
         fi
-        echo "Tentativa $i/36: Status HTTP $HTTP_STATUS. Aguardando 5s..."
+        echo "Attempt $i/36: Received HTTP $HTTP_STATUS. Waiting 5s..."
         sleep 5
       done
-      echo "ERRO: Timeout aguardando o MISP retornar HTTP 200."
+      echo "ERROR: Timed out waiting for /users/login to return HTTP 200."
       exit 1
   after_script:
     - docker compose -f docker-compose-dev.yml logs misp-core || true
     - docker compose -f docker-compose-dev.yml down -v || true
 
 # ==============================================================================
-# STAGE 3: security - Análise SAST, Segredos e Infraestrutura
+# STAGE 3: security - SAST, Secrets & Infrastructure Scanning
 # ==============================================================================
 
 php-security-checker:
@@ -143,7 +143,7 @@ php-security-checker:
   image: registry.gitlab.com/pipeline-components/php-security-checker:latest
   needs: []
   script:
-    - if [ -f composer.lock ]; then security-checker security:check composer.lock; else echo "composer.lock não encontrado, pulando."; fi
+    - if [ -f composer.lock ]; then security-checker security:check composer.lock; else echo "composer.lock not found, skipping."; fi
 
 iac-config-scan:
   stage: security
@@ -160,7 +160,7 @@ iac-config-scan:
       - trivy-iac-report.json
 
 # ==============================================================================
-# STAGE 4: sbom - Gerador de Inventários de Software (EU CRA)
+# STAGE 4: sbom - EU CRA Software Inventory Generation
 # ==============================================================================
 
 generate-sbom:
@@ -183,7 +183,5 @@ generate-sbom:
       - sbom-plugin.spdx.json
       - gl-sbom-vulnerabilities.cdx.json
     reports:
-      cyclonedx:
-        - gl-sbom-plugin.cdx.json
-        - gl-sbom-vulnerabilities.cdx.json
-        - 
+      cyclonedx: ["gl-sbom-plugin.cdx.json", "gl-sbom-vulnerabilities.cdx.json"]
+      
