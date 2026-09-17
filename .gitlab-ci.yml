@@ -133,22 +133,47 @@ test-misp-login-200:
         sleep 5
       done
 
-    - echo "--> Executing installer..."
-    - docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
-
     - |
-      echo "--> Validating HTTP 200 access..."
+      echo "--> STEP 1: Validating BASE MISP access (without plugin)..."
+      BASE_SUCCESS=0
       for i in $(seq 1 12); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
         if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: /users/login returned HTTP 200!"
-          exit 0
+          echo "SUCCESS: Base MISP /users/login returned HTTP 200!"
+          BASE_SUCCESS=1
+          break
         fi
-        echo "Attempt $i/12: Received HTTP $HTTP_STATUS. Waiting 5s..."
+        echo "Attempt $i/12 (Base MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
         sleep 5
       done
-      echo "ERROR: Timed out waiting for HTTP 200 response."
-      exit 1
+
+      if [ "$BASE_SUCCESS" -ne 1 ]; then
+        echo "ERROR: Base MISP failed to return HTTP 200 before plugin installation."
+        exit 1
+      fi
+
+    - echo "--> Executing plugin installer..."
+    - docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+
+    - |
+      echo "--> STEP 2: Validating MISP access (with plugin installed)..."
+      PLUGIN_SUCCESS=0
+      for i in $(seq 1 12); do
+        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+        if [ "$HTTP_STATUS" -eq 200 ]; then
+          echo "SUCCESS: MISP with plugin /users/login returned HTTP 200!"
+          PLUGIN_SUCCESS=1
+          break
+        fi
+        echo "Attempt $i/12 (Plugin MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
+        sleep 5
+      done
+
+      if [ "$PLUGIN_SUCCESS" -ne 1 ]; then
+        echo "ERROR: MISP failed to return HTTP 200 after plugin installation."
+        exit 1
+      fi
+
   after_script:
     - docker compose -f docker-compose-dev.yml logs misp-modules || true
     - docker compose -f docker-compose-dev.yml logs misp-core || true
