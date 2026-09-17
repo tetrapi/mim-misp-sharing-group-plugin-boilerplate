@@ -57,36 +57,35 @@ shellcheck:
   image: koalaman/shellcheck-alpine:latest
   needs: []
   script:
-    - shellcheck dev.sh msgd_installer.sh || true
+    - shellcheck dev.sh msgd_installer.sh
 
 linting-psr12:
   stage: test
   image: registry.gitlab.com/pipeline-components/php-codesniffer:latest
   needs: []
   script:
-    - phpcs -s -p --colors --extensions=php --standard=PSR12 MsgdPlug/ || true
+    - phpcs -s -p --colors --extensions=php --standard=PSR12 MsgdPlug/
 
 eslint-js:
   stage: test
   image: node:latest
   needs: []
   script:
-    - npx eslint MsgdPlug/webroot/js/ || true
+    - npx eslint MsgdPlug/webroot/js/
 
 yamllint:
   stage: test
   image: registry.gitlab.com/pipeline-components/yamllint:latest
-  allow_failure: true
   needs: []
   script:
-    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable}}" .'
 
 prettier:
   stage: test
   image: node:latest
   needs: []
   script:
-    - npx prettier --check MsgdPlug/webroot/js/ || true
+    - npx prettier --check MsgdPlug/webroot/js/
 
 # ==============================================================================
 # STAGE 2: integration - MISP Stack + Plugin Integration Test
@@ -99,10 +98,19 @@ test-misp-login-200:
     - docker:dind
   variables:
     DOCKER_TLS_CERTDIR: ""
+    BASE_URL: "https://localhost"
+    CRON_PULLALL: "false"
+    CRON_PUSHALL: "false"
+    DISABLE_IPV6: "false"
   needs: []
   before_script:
     - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
+    # Enforce mandatory environment variables in .env if missing
+    - grep -q "^BASE_URL=" .env || echo "BASE_URL=https://localhost" >> .env
+    - grep -q "^CRON_PULLALL=" .env || echo "CRON_PULLALL=false" >> .env
+    - grep -q "^CRON_PUSHALL=" .env || echo "CRON_PUSHALL=false" >> .env
+    - grep -q "^DISABLE_IPV6=" .env || echo "DISABLE_IPV6=false" >> .env
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
