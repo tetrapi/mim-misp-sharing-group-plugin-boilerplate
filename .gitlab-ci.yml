@@ -184,4 +184,3 @@ generate-sbom:
       - gl-sbom-vulnerabilities.cdx.json
     reports:
       cyclonedx: ["gl-sbom-plugin.cdx.json", "gl-sbom-vulnerabilities.cdx.json"]
-      
