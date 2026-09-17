@@ -24,7 +24,6 @@ include:
   - template: Jobs/Secret-Detection.gitlab-ci.yml
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
 
-# Sobrescrita para vincular os scanners do GitLab ao estágio 'security'
 .sast-analyzer:
   stage: security
   needs: []
@@ -80,7 +79,7 @@ yamllint:
   allow_failure: true
   needs: []
   script:
-    - yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
 
 prettier:
   stage: test
@@ -110,7 +109,7 @@ test-misp-login-200:
     - |
       echo "Aguardando o container misp-core inicializar..."
       until docker compose -f docker-compose-dev.yml exec -T misp-core true 2>/dev/null; do
-      sleep 2
+        sleep 2
       done
 
       echo "Copiando msgd_installer.sh para dentro do container..."
@@ -187,3 +186,4 @@ generate-sbom:
       cyclonedx:
         - gl-sbom-plugin.cdx.json
         - gl-sbom-vulnerabilities.cdx.json
+        - 
