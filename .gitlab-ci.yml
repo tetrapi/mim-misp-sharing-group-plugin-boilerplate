@@ -64,7 +64,7 @@ linting-psr12:
   image: registry.gitlab.com/pipeline-components/php-codesniffer:latest
   needs: []
   script:
-    - phpcs -s -p --colors --extensions=php --standard=PSR12 MsgdPlug/
+    - phpcs -s -p --colors --extensions=php --standard=.phpcs.xml MsgdPlug/
 
 eslint-js:
   stage: test

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('AppHelper', 'View/Helper');
@@ -13,9 +20,6 @@ App::uses('View', 'View');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.View.Helper
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdInjectorHelper extends AppHelper
 {

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
@@ -12,9 +19,6 @@ require_once dirname(__DIR__, 4) . '/Lib/DTO/MsgdGetSharingGroupsDTO.php';
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Test.Case.Lib.DTO
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdGetSharingGroupsDTOTest extends TestCase
 {

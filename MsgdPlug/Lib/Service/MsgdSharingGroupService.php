@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('SharingGroup', 'Model');
@@ -11,9 +18,6 @@ App::uses('DataSource', 'Model/Datasource');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Service
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdSharingGroupService
 {

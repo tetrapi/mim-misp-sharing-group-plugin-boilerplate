@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\MockObject\MockObject;
@@ -23,9 +30,6 @@ if (class_exists('App')) {
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Test.Case.Controller
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdPlugAppControllerTest extends TestCase
 {

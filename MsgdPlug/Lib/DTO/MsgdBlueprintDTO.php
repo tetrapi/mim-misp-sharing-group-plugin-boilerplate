@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 /**
@@ -7,20 +14,17 @@ declare(strict_types=1);
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.DTO
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdBlueprintDTO
 {
     public function __construct(
+        public readonly MsgdBlueprintRulesDTO $rules,
         public readonly int $id = 0,
         public readonly string $uuid = '',
         public string $name = '',
         public readonly int $userId = 0,
         public readonly int $orgId = 0,
         public int $sharingGroupId = 0,
-        public readonly MsgdBlueprintRulesDTO $rules,
     ) {
     }
 

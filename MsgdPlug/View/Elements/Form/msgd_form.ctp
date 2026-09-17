@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 /**
@@ -9,9 +16,6 @@ declare(strict_types=1);
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.View.Elements.Form
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 
 try {

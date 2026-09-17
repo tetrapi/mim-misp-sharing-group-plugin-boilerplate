@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('CakeLog', 'Log');
@@ -10,9 +17,6 @@ App::uses('Configure', 'Core');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Utility
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdLoggerUtility
 {
@@ -52,12 +56,7 @@ final class MsgdLoggerUtility
         $utf8LogMessage = mb_scrub($logMessage, 'UTF-8');
 
         if (mb_strlen($utf8LogMessage, 'UTF-8') > self::MAX_LOG_LENGTH) {
-            $utf8LogMessage = mb_substr(
-                    $utf8LogMessage,
-                    0,
-                    self::MAX_LOG_LENGTH,
-                    'UTF-8'
-                ) . '... [TRUNCATED]';
+            $utf8LogMessage = mb_substr($utf8LogMessage, 0, self::MAX_LOG_LENGTH, 'UTF-8') . '... [TRUNCATED]';
         }
 
         $singleLineMessage = (string)preg_replace(

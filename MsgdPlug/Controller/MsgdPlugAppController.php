@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('CakeResponse', 'Network');
@@ -10,9 +17,6 @@ App::uses('AppController', 'Controller');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Controller
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdPlugAppController extends AppController
 {

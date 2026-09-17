@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 /**
@@ -7,15 +14,19 @@ declare(strict_types=1);
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.View.Elements.Common
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 ?>
 
 <?= $this->Html->css(MsgdPluginFileEnum::STYLE_CSS->getPath(), ['inline' => true]); ?>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Main modal to select groups and configure the blueprint */ ?>
 <script type="text/template" id="tpl-msgd-modal-blueprint">
     <div id="msgdBlueprintModal" class="modal hide fade msgd-modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -69,6 +80,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Main trigger button that opens the group selection modal */ ?>
 <script type="text/template" id="tpl-msgd-button">
     <div class="msgd-button-wrapper">
@@ -81,6 +99,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Operations toolbar with search filter and toggle option */ ?>
 <script type="text/template" id="tpl-msgd-operation-toolbar">
     <div class="msgd-operation-toolbar">
@@ -101,6 +126,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Wrapper container uniting the operations toolbar and content view */ ?>
 <script type="text/template" id="tpl-msgd-operation-wrapper">
     <div class="msgd-operation-wrapper">
@@ -112,6 +144,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Table structure for listing available sharing groups with checkboxes */ ?>
 <script type="text/template" id="tpl-msgd-operation-table">
     <table class="msgd-operation-table">
@@ -126,6 +165,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Individual table row with a group selection checkbox */ ?>
 <script type="text/template" id="tpl-msgd-operation-row">
     <tr class="msgd-checkbox-item msgd-operation-row">
@@ -138,6 +184,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Overview modal displaying associated sharing group details */ ?>
 <script type="text/template" id="tpl-msgd-modal-view">
     <div id="msgdViewModal" class="modal hide fade msgd-modal" tabindex="-1" role="dialog"
@@ -156,6 +209,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Summary info table displaying total count and selected group list */ ?>
 <script type="text/template" id="tpl-msgd-info-table">
     <table class="msgd-info-table">
@@ -173,6 +233,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Header action controls for panel locking/dragging or collapsing */ ?>
 <script type="text/template" id="tpl-msgd-header-actions">
     <div class="msgd-header-actions">
@@ -187,6 +254,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Primary/Main sharing group row layout */ ?>
 <script type="text/template" id="tpl-msgd-info-main-row">
     <tr class="msgd-row-main">
@@ -198,6 +272,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Standard row layout for secondary sharing groups */ ?>
 <script type="text/template" id="tpl-msgd-info-row">
     <tr>
@@ -209,6 +290,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Action icon button to open sharing group details in a new browser tab */ ?>
 <script type="text/template" id="tpl-msgd-sg-eye-btn">
     <a href="{{VIEW_URL}}" target="_blank" rel="noopener noreferrer" class="msgd-sg-info-btn"
@@ -218,6 +306,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Compact button for index views that triggers the groups modal */ ?>
 <script type="text/template" id="tpl-msgd-index-view-btn">
     <button type="button" class="btn btn-mini btn-info msgd-index-view-btn" data-sg-id="{{SG_ID}}"
@@ -227,6 +322,13 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Loading indicator state (spinner animation) */ ?>
 <script type="text/template" id="tpl-msgd-feedback-loading">
     <div class="msgd-feedback-loading">
@@ -235,12 +337,26 @@ declare(strict_types=1);
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Empty feedback message when no items match */ ?>
 <script type="text/template" id="tpl-msgd-feedback-empty">
     <div class="msgd-feedback-empty">{{MESSAGE}}</div>
 </script>
 
 <?php
+
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
 /* Error feedback container for UI or API failures */ ?>
 <script type="text/template" id="tpl-msgd-feedback-error">
     <div class="msgd-feedback-error">{{MESSAGE}}</div>

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('CakeText', 'Utility');
@@ -12,9 +19,6 @@ App::uses('DataSource', 'Model/Datasource');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Service
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdBlueprintService
 {
@@ -233,8 +237,8 @@ class MsgdBlueprintService
                     && $uuidIdentifiersInput === $normalizedExtracted;
 
                 if ($matchesPrimary || $matchesMirror) {
-                    if (!$blueprint->sharingGroupId){
-                        if (($blueprint->orgId === $user->orgId) || ($user->isSiteAdmin)){
+                    if (!$blueprint->sharingGroupId) {
+                        if (($blueprint->orgId === $user->orgId) || ($user->isSiteAdmin)) {
                             return $blueprint;
                         }
                     } else {
@@ -330,13 +334,13 @@ class MsgdBlueprintService
             }
         }
 
-        if (!$this->sharingGroupBlueprint->validateBlueprintPermissions(
-            $blueprint->toModelArray(),
-            $user->toModelArray()
-        )) {
-            throw new MethodNotAllowedException(
-                'You are not allowed to modify the target sharing group.'
-            );
+        if (
+            !$this->sharingGroupBlueprint->validateBlueprintPermissions(
+                $blueprint->toModelArray(),
+                $user->toModelArray()
+            )
+        ) {
+            throw new MethodNotAllowedException('You are not allowed to modify the target sharing group.');
         }
 
         try {
@@ -418,10 +422,12 @@ class MsgdBlueprintService
             rules: MsgdBlueprintRulesDTO::fromIdentifiers($payload->groups),
         );
 
-        if (!$this->sharingGroupBlueprint->validateBlueprintPermissions(
-            $newBlueprint->toModelArray(),
-            $user->toModelArray()
-        )) {
+        if (
+            !$this->sharingGroupBlueprint->validateBlueprintPermissions(
+                $newBlueprint->toModelArray(),
+                $user->toModelArray()
+            )
+        ) {
             throw new MethodNotAllowedException(
                 'You are not allowed to modify the target sharing group.'
             );

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 /**
@@ -7,9 +14,6 @@ declare(strict_types=1);
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Enum
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 enum MsgdMispDistributionLevelEnum: string
 {

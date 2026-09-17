@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('Configure', 'Core');
@@ -11,9 +18,6 @@ App::uses('Configure', 'Core');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.View.Elements.Common
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 
 try {

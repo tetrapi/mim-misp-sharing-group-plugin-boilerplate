@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('CakeLog', 'Log');
@@ -17,9 +24,6 @@ App::uses('MsgdInjectorHelper', 'MsgdPlug.View/Helper');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Config
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 
 CakeLog::config('msgd_error_stream', [

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 /**
@@ -7,9 +14,6 @@ declare(strict_types=1);
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Service
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdApiControllerService
 {
@@ -185,19 +189,19 @@ class MsgdApiControllerService
     public function processSingleGroup(MsgdUserDTO $user, string|int $identifier): ?MsgdProcessResultDTO
     {
         if (MsgdSanitizerUtility::isValidUuid((string)$identifier)) {
-            $targetSharingGroupRecord = $this->sgLib->findByUuid($user, (string)$identifier);
+            $targetSharingGroup = $this->sgLib->findByUuid($user, (string)$identifier);
         } elseif (is_numeric($identifier) && (int)$identifier > 0) {
-            $targetSharingGroupRecord = $this->sgLib->findById($user, (int)$identifier);
+            $targetSharingGroup = $this->sgLib->findById($user, (int)$identifier);
         } else {
             return null;
         }
 
-        if (!empty($targetSharingGroupRecord) && isset($targetSharingGroupRecord->id, $targetSharingGroupRecord->name)) {
+        if (!empty($targetSharingGroup) && isset($targetSharingGroup->id, $targetSharingGroup->name)) {
             return new MsgdProcessResultDTO(
                 isNew: false,
                 hasBlueprint: false,
-                sharingGroupId: $targetSharingGroupRecord->id,
-                sharingGroupName: MsgdSanitizerUtility::sanitizeString($targetSharingGroupRecord->name),
+                sharingGroupId: $targetSharingGroup->id,
+                sharingGroupName: MsgdSanitizerUtility::sanitizeString($targetSharingGroup->name),
             );
         }
 

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
@@ -21,9 +28,6 @@ App::uses('DataSource', 'Model/Datasource');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Test.Case.Lib.Service
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdBlueprintServiceTest extends TestCase
 {

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
@@ -15,9 +22,6 @@ App::uses('Configure', 'Core');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Test.Case.Lib.Utility
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdLoggerUtilityTest extends TestCase
 {

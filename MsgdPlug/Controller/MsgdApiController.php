@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 App::uses('MsgdPlugAppController', 'MsgdPlug.Controller');
@@ -12,9 +19,6 @@ App::uses('MsgdPlugAppController', 'MsgdPlug.Controller');
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Controller
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 class MsgdApiController extends MsgdPlugAppController
 {

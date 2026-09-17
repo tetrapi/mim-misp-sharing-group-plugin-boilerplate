@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * MsgdPlug Plugin
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
@@ -11,9 +18,6 @@ require_once dirname(__DIR__, 4) . '/Lib/Utility/MsgdSanitizerUtility.php';
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Test.Case.Lib.Utility
- *
- * @author     TETRAPI SA, Lino Pacheco
- * @license    AGPL-3.0
  */
 final class MsgdSanitizerUtilityTest extends TestCase
 {
