@@ -17,7 +17,40 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
 # ==============================================================================
-# STAGE 1: test - Code Quality & Shell Verification
+# INCLUDES: Templates Oficiais de Segurança do GitLab
+# ==============================================================================
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+
+# Sobrescrita para vincular os scanners do GitLab ao estágio 'security'
+.sast-analyzer:
+  stage: security
+  needs: []
+
+.secret-analyzer:
+  stage: security
+  needs: []
+
+.dependency-scanning-analyzer:
+  stage: security
+  needs: []
+
+secret_detection:
+  stage: security
+  needs: []
+
+sast:
+  stage: security
+  needs: []
+
+dependency_scanning:
+  stage: security
+  needs: []
+
+# ==============================================================================
+# STAGE 1: test - Qualidade de Código, Linters e Formatação
 # ==============================================================================
 
 shellcheck:
@@ -41,8 +74,23 @@ eslint-js:
   script:
     - npx eslint MsgdPlug/webroot/js/ || true
 
+yamllint:
+  stage: test
+  image: registry.gitlab.com/pipeline-components/yamllint:latest
+  allow_failure: true
+  needs: []
+  script:
+    - yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .
+
+prettier:
+  stage: test
+  image: node:latest
+  needs: []
+  script:
+    - npx prettier --check MsgdPlug/webroot/js/ || true
+
 # ==============================================================================
-# STAGE 2: integration - Full Stack MISP + Plugin Login Test
+# STAGE 2: integration - Teste da Stack MISP + Plugin
 # ==============================================================================
 
 test-misp-login-200:
@@ -55,45 +103,48 @@ test-misp-login-200:
   needs: []
   before_script:
     - apk add --no-progress --no-cache curl bash
-    # Create .env from template prior to launching Docker Compose to suppress variable warnings
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
   script:
-    # 1. Start Docker Compose stack
     - docker compose -f docker-compose-dev.yml up -d
 
-    # 2. Wait for container and explicitly copy installer script
     - |
-      echo "Waiting for misp-core container to initialize..."
+      echo "Aguardando o container misp-core inicializar..."
       until docker compose -f docker-compose-dev.yml exec -T misp-core true 2>/dev/null; do
-        sleep 2
+      sleep 2
       done
 
-      echo "Copying msgd_installer.sh into container..."
+      echo "Copiando msgd_installer.sh para dentro do container..."
       docker compose -f docker-compose-dev.yml cp ./msgd_installer.sh misp-core:/var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core chmod +x /var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
-    # 3. Test HTTP 200 response on /users/login (3-minute timeout for initial database setup)
     - |
-      echo "Testing endpoint: https://localhost/users/login..."
+      echo "Testando endpoint: https://localhost/users/login..."
       for i in $(seq 1 36); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
         if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: /users/login returned HTTP 200!"
+          echo "SUCESSO: /users/login respondeu HTTP 200!"
           exit 0
         fi
-        echo "Attempt $i/36: Received HTTP $HTTP_STATUS. Waiting 5s (MySQL schema initializing)..."
+        echo "Tentativa $i/36: Status HTTP $HTTP_STATUS. Aguardando 5s..."
         sleep 5
       done
-      echo "ERROR: Timed out waiting for /users/login to return HTTP 200."
+      echo "ERRO: Timeout aguardando o MISP retornar HTTP 200."
       exit 1
   after_script:
     - docker compose -f docker-compose-dev.yml logs misp-core || true
     - docker compose -f docker-compose-dev.yml down -v || true
 
 # ==============================================================================
-# STAGE 3: security - CRA Security & Secret Scanning
+# STAGE 3: security - Análise SAST, Segredos e Infraestrutura
 # ==============================================================================
+
+php-security-checker:
+  stage: security
+  image: registry.gitlab.com/pipeline-components/php-security-checker:latest
+  needs: []
+  script:
+    - if [ -f composer.lock ]; then security-checker security:check composer.lock; else echo "composer.lock não encontrado, pulando."; fi
 
 iac-config-scan:
   stage: security
@@ -109,24 +160,8 @@ iac-config-scan:
     paths:
       - trivy-iac-report.json
 
-secret_detection:
-  stage: security
-  image:
-    name: zricethezav/gitleaks:latest
-    entrypoint: [""]
-  needs: []
-  script:
-    - gitleaks detect --source="." --verbose --redact
-
-include:
-  - template: Jobs/SAST.gitlab-ci.yml
-  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
-
-.sast-analyzer:
-  stage: security
-
 # ==============================================================================
-# STAGE 4: sbom - EU CRA Compliant Inventory Generation
+# STAGE 4: sbom - Gerador de Inventários de Software (EU CRA)
 # ==============================================================================
 
 generate-sbom:
