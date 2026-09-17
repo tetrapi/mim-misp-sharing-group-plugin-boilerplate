@@ -36,7 +36,7 @@ restore_interactive() {
 
     if [ ! -d "$PLUGIN_DEST" ]; then
         echo "[WARNING] Plugin folder not found in destination ($PLUGIN_DEST)."
-        read -p "Do you want to reinstall/copy the plugin folder back? (y/N): " install_choice
+        read -r -p "Do you want to reinstall/copy the plugin folder back? (y/N): " install_choice
         case "$install_choice" in
             [yY][eE][sS]|[yY])
                 echo "[INFO] Copying source files..."
@@ -54,7 +54,7 @@ restore_interactive() {
         local backups=()
         while IFS= read -r backup_file; do
             [ -n "$backup_file" ] && backups+=("$backup_file")
-        done < <(ls -1 "${path}.bak_"* 2>/dev/null | sort -r)
+        done < <(find "$(dirname "$path")" -maxdepth 1 -name "$(basename "$path").bak_*" 2>/dev/null | sort -r)
 
         if [ ${#backups[@]} -eq 0 ]; then
             echo "[INFO] No backups found for ${f}"
@@ -74,7 +74,7 @@ restore_interactive() {
 
         local choice
         while true; do
-            read -p "Select backup to restore [1-${#backups[@]}] (Default: 1 - Newest): " choice
+            read -r -p "Select backup to restore [1-${#backups[@]}] (Default: 1 - Newest): " choice
 
             if [ -z "$choice" ]; then
                 choice=1
@@ -115,7 +115,7 @@ restore_interactive() {
 
 copy_plugin() {
     if [ -d "$PLUGIN_SOURCE" ]; then
-        cp -r "$PLUGIN_SOURCE" "$PLUGIN_DEST"
+        cp -R "$PLUGIN_SOURCE" "$PLUGIN_DEST"
         echo "[OK] Plugin copied"
     fi
 }
@@ -402,7 +402,7 @@ menu() {
         echo "4) Restore (Select Backup)"
         echo "0) Exit"
         echo "========================="
-        read -p "Select option: " choice
+        read -r -p "Select option: " choice
 
         case "$choice" in
             1) install_all ;;

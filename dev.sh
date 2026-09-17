@@ -9,7 +9,7 @@ INSTALLER_PATH="/var/www/MISP/msgd_installer.sh"
 ENV_FILE=".env"
 EXAMPLE_ENV_FILE="example.env"
 
-DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
+DOCKER_COMPOSE=(docker compose -f "$COMPOSE_FILE")
 
 ensure_env_file() {
     if [ ! -f "$ENV_FILE" ]; then
@@ -38,7 +38,7 @@ sync_stubs() {
     echo "--> Copying MISP core files for IDE autocomplete..."
     mkdir -p .misp-stubs
 
-    CONTAINER_ID=$($DOCKER_COMPOSE ps -q "$CONTAINER_NAME")
+    CONTAINER_ID=$("${DOCKER_COMPOSE[@]}" ps -q "$CONTAINER_NAME")
 
     if [ -z "$CONTAINER_ID" ]; then
         echo "[ERROR] Container $CONTAINER_NAME is not running!"
@@ -54,7 +54,7 @@ sync_stubs() {
 }
 
 wait_for_healthy() {
-    CONTAINER_ID=$($DOCKER_COMPOSE ps -q "$CONTAINER_NAME")
+    CONTAINER_ID=$("${DOCKER_COMPOSE[@]}" ps -q "$CONTAINER_NAME")
 
     if [ -z "$CONTAINER_ID" ]; then
         echo "[ERROR] Container $CONTAINER_NAME was not found!"
@@ -98,12 +98,12 @@ deploy_environment() {
     ensure_env_file
 
     echo "--> Starting Docker Containers..."
-    $DOCKER_COMPOSE up -d
+    "${DOCKER_COMPOSE[@]}" up -d
 
     wait_for_healthy
 
     echo "--> Executing Installer..."
-    $DOCKER_COMPOSE exec "$CONTAINER_NAME" bash "$INSTALLER_PATH" --auto
+    "${DOCKER_COMPOSE[@]}" exec "$CONTAINER_NAME" bash "$INSTALLER_PATH" --auto
 
     sync_stubs
     load_env_vars
@@ -118,7 +118,7 @@ deploy_environment() {
 
 run_all_tests() {
     echo "--> Executing all tests for MsgdPlug..."
-    $DOCKER_COMPOSE exec "$CONTAINER_NAME" /var/www/MISP/app/Vendor/bin/phpunit \
+    "${DOCKER_COMPOSE[@]}" exec "$CONTAINER_NAME" /var/www/MISP/app/Vendor/bin/phpunit \
         --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php \
         /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ || true
     exit 0
@@ -126,15 +126,15 @@ run_all_tests() {
 
 stop_docker() {
     echo "--> Stopping Docker containers..."
-    $DOCKER_COMPOSE stop
+    "${DOCKER_COMPOSE[@]}" stop
     echo "--> Containers stopped."
 }
 
 purge_docker() {
-    read -p "WARNING: This will delete all containers, database volumes, and stubs. Continue? [y/N]: " confirm
+    read -r -p "WARNING: This will delete all containers, database volumes, and stubs. Continue? [y/N]: " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo "--> Purging environment..."
-        sudo $DOCKER_COMPOSE down -v --remove-orphans
+        sudo "${DOCKER_COMPOSE[@]}" down -v --remove-orphans
         sudo rm -rf .misp-stubs configs files gnupg logs ssl custom
         echo "--> Data purged successfully."
     else
@@ -145,7 +145,7 @@ purge_docker() {
 # Main Loop
 while true; do
     show_menu
-    read -p "Select an option [0-5]: " choice
+    read -r -p "Select an option [0-5]: " choice
     case $choice in
         1) deploy_environment ;;
         2) run_all_tests ;;
