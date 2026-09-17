@@ -79,7 +79,7 @@ yamllint:
   allow_failure: true
   needs: []
   script:
-    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable}}" .'
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
 
 prettier:
   stage: test
@@ -108,31 +108,33 @@ test-misp-login-200:
     - docker compose -f docker-compose-dev.yml up -d
 
     - |
-      echo "Waiting for misp-core and DB initialization..."
-      until docker compose -f docker-compose-dev.yml exec -T misp-core curl -ks https://localhost/users/heartbeat >/dev/null 2>&1; do
-        echo "MISP initialization in progress, waiting 5s..."
+      echo "Aguardando importacao do banco de dados e inicializacao do MISP (pode levar ate 3-5 min)..."
+      for i in $(seq 1 60); do
+        HTTP_STATUS=$(docker compose -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+        if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+          echo "MISP pronto! Resposta HTTP $HTTP_STATUS detectada na tentativa $i."
+          break
+        fi
+        echo "Tentativa $i/60: MISP em inicializacao (Status HTTP: $HTTP_STATUS). Aguardando 5s..."
         sleep 5
       done
 
-      echo "Copying and executing msgd_installer.sh..."
+      echo "Copiando e executando msgd_installer.sh..."
       docker compose -f docker-compose-dev.yml cp ./msgd_installer.sh misp-core:/var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core dos2unix /var/www/MISP/msgd_installer.sh 2>/dev/null || true
       docker compose -f docker-compose-dev.yml exec -T misp-core chmod +x /var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - |
-      echo "Testing endpoint: https://localhost/users/login..."
-      for i in $(seq 1 36); do
-        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: /users/login returned HTTP 200!"
-          exit 0
-        fi
-        echo "Attempt $i/36: Received HTTP $HTTP_STATUS. Waiting 5s..."
-        sleep 5
-      done
-      echo "ERROR: Timed out waiting for /users/login to return HTTP 200."
-      exit 1
+      echo "Validando acesso final ao endpoint: https://localhost/users/login..."
+      HTTP_FINAL=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+      if [ "$HTTP_FINAL" -eq 200 ]; then
+        echo "SUCESSO: /users/login retornou HTTP 200!"
+        exit 0
+      else
+        echo "ERRO: /users/login retornou HTTP $HTTP_FINAL."
+        exit 1
+      fi
   after_script:
     - docker compose -f docker-compose-dev.yml logs misp-core || true
     - docker compose -f docker-compose-dev.yml down -v || true
@@ -187,4 +189,3 @@ generate-sbom:
       - gl-sbom-vulnerabilities.cdx.json
     reports:
       cyclonedx: ["gl-sbom-plugin.cdx.json", "gl-sbom-vulnerabilities.cdx.json"]
-      
