@@ -103,24 +103,21 @@ test-misp-login-200:
     - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
     - |
-      # Inject critical fallbacks into .env to prevent startup failure
-      ENV_DEFAULTS=(
-        "BASE_URL=https://localhost"
-        "MODULES_COMMIT=main"
-        "DISABLE_SSL_REDIRECT=false"
-        "DISABLE_CA_REFRESH=false"
-        "CRON_PULLALL=false"
-        "CRON_PUSHALL=false"
+      for entry in \
+        "BASE_URL=https://localhost" \
+        "MODULES_COMMIT=main" \
+        "DISABLE_SSL_REDIRECT=false" \
+        "DISABLE_CA_REFRESH=false" \
+        "CRON_PULLALL=false" \
+        "CRON_PUSHALL=false" \
         "DISABLE_IPV6=false"
-      )
-      for entry in "${ENV_DEFAULTS[@]}"; do
+      do
         key="${entry%%=*}"
         grep -q "^${key}=" .env || echo "$entry" >> .env
       done
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
-    # 1. Bring up supporting services first to let misp-modules complete initialization
     - docker compose -f docker-compose-dev.yml up -d redis db mail misp-modules
     - docker compose -f docker-compose-dev.yml up -d misp-core
 
