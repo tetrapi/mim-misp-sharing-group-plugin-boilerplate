@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Supported MISP controller actions.
+ *
+ * @package    MsgdPlug
+ * @subpackage MsgdPlug.Lib.Enum
+ *
+ * @author     TETRAPI SA, Lino Pacheco
+ * @license    AGPL-3.0
+ */
+enum MsgdMispActionEnum: string
+{
+    case ADD = 'add';
+    case EDIT = 'edit';
+    case VIEW = 'view';
+    case INDEX = 'index';
+
+    /**
+     * Safely converts an action string to its matching enum case.
+     *
+     * @param string|null $value
+     *
+     * @return self|null
+     */
+    public static function tryFromLower(?string $value): ?self
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return self::tryFrom(strtolower(MsgdSanitizerUtility::sanitizeString($value)));
+    }
+
+    /**
+     * Returns the view element associated with this action.
+     *
+     * @return MsgdPluginFileEnum
+     */
+    public function getActionElement(): MsgdPluginFileEnum
+    {
+        return match ($this) {
+            self::ADD, self::EDIT => MsgdPluginFileEnum::FORM_CTP,
+            self::VIEW, self::INDEX => MsgdPluginFileEnum::VIEW_CTP,
+        };
+    }
+
+    /**
+     * Generates the route payload key used for frontend URL passing.
+     *
+     * @return string
+     */
+    public function getRouteKey(): string
+    {
+        return $this->value . 'Url';
+    }
+}

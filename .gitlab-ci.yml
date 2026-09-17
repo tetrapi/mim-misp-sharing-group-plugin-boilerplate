@@ -1,0 +1,154 @@
+image: docker:latest
+
+stages:
+  - test
+  - integration
+  - security
+  - sbom
+
+variables:
+  DS_MAX_DEPTH: "-1"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# ==============================================================================
+# STAGE 1: test - Code Quality & Shell Verification
+# ==============================================================================
+
+shellcheck:
+  stage: test
+  image: koalaman/shellcheck-alpine:latest
+  needs: []
+  script:
+    - shellcheck dev.sh msgd_installer.sh || true
+
+linting-psr12:
+  stage: test
+  image: registry.gitlab.com/pipeline-components/php-codesniffer:latest
+  needs: []
+  script:
+    - phpcs -s -p --colors --extensions=php --standard=PSR12 MsgdPlug/ || true
+
+eslint-js:
+  stage: test
+  image: node:latest
+  needs: []
+  script:
+    - npx eslint MsgdPlug/webroot/js/ || true
+
+# ==============================================================================
+# STAGE 2: integration - Full Stack MISP + Plugin Login Test
+# ==============================================================================
+
+test-misp-login-200:
+  stage: integration
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  needs: []
+  before_script:
+    - apk add --no-progress --no-cache curl bash
+    # Create .env from template prior to launching Docker Compose to suppress variable warnings
+    - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
+  script:
+    # 1. Start Docker Compose stack
+    - docker compose -f docker-compose-dev.yml up -d
+
+    # 2. Wait for container and explicitly copy installer script
+    - |
+      echo "Waiting for misp-core container to initialize..."
+      until docker compose -f docker-compose-dev.yml exec -T misp-core true 2>/dev/null; do
+        sleep 2
+      done
+
+      echo "Copying msgd_installer.sh into container..."
+      docker compose -f docker-compose-dev.yml cp ./msgd_installer.sh misp-core:/var/www/MISP/msgd_installer.sh
+      docker compose -f docker-compose-dev.yml exec -T misp-core chmod +x /var/www/MISP/msgd_installer.sh
+      docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+
+    # 3. Test HTTP 200 response on /users/login (3-minute timeout for initial database setup)
+    - |
+      echo "Testing endpoint: https://localhost/users/login..."
+      for i in $(seq 1 36); do
+        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+        if [ "$HTTP_STATUS" -eq 200 ]; then
+          echo "SUCCESS: /users/login returned HTTP 200!"
+          exit 0
+        fi
+        echo "Attempt $i/36: Received HTTP $HTTP_STATUS. Waiting 5s (MySQL schema initializing)..."
+        sleep 5
+      done
+      echo "ERROR: Timed out waiting for /users/login to return HTTP 200."
+      exit 1
+  after_script:
+    - docker compose -f docker-compose-dev.yml logs misp-core || true
+    - docker compose -f docker-compose-dev.yml down -v || true
+
+# ==============================================================================
+# STAGE 3: security - CRA Security & Secret Scanning
+# ==============================================================================
+
+iac-config-scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: []
+  script:
+    - trivy config --exit-code 0 --severity HIGH,CRITICAL,MEDIUM --format json -o trivy-iac-report.json .
+    - trivy config --exit-code 0 --severity HIGH,CRITICAL,MEDIUM .
+  artifacts:
+    when: always
+    paths:
+      - trivy-iac-report.json
+
+secret_detection:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  needs: []
+  script:
+    - gitleaks detect --source="." --verbose --redact
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+
+.sast-analyzer:
+  stage: security
+
+# ==============================================================================
+# STAGE 4: sbom - EU CRA Compliant Inventory Generation
+# ==============================================================================
+
+generate-sbom:
+  stage: sbom
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: []
+  before_script:
+    - wget -qO- https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+  script:
+    - syft dir:. -o cyclonedx-json=gl-sbom-plugin.cdx.json
+    - syft dir:. -o spdx-json=sbom-plugin.spdx.json
+    - trivy fs --scanners vuln,license --format cyclonedx -o gl-sbom-vulnerabilities.cdx.json .
+    - trivy fs --scanners vuln --exit-code 1 --severity CRITICAL .
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - gl-sbom-plugin.cdx.json
+      - sbom-plugin.spdx.json
+      - gl-sbom-vulnerabilities.cdx.json
+    reports:
+      cyclonedx:
+        - gl-sbom-plugin.cdx.json
+        - gl-sbom-vulnerabilities.cdx.json
