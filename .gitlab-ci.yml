@@ -129,26 +129,47 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for misp-core container ID..."
-      CONTAINER_ID=""
-      until [ -n "$CONTAINER_ID" ]; do
-        CONTAINER_ID=$(docker compose -f docker-compose-dev.yml ps -q misp-core 2>/dev/null || true)
-        sleep 2
+      echo "--> Waiting for MISP Core to start web services (up to 3 minutes)..."
+      READY=0
+      for i in $(seq 1 36); do
+        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+        echo "Attempt $i/36: /users/login returned HTTP $HTTP_STATUS"
+      
+        if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+          echo "--> MISP Core web service is UP and responding!"
+          READY=1
+          break
+        fi
+        sleep 5
       done
 
-      echo "--> Waiting for misp-core health check..."
-      while true; do
-        STATUS=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" "$CONTAINER_ID")
-        echo "--> Current misp-core status: $STATUS"
+      if [ "$READY" -ne 1 ]; then
+        echo "ERROR: Timed out waiting for MISP Core startup."
+        docker compose -f docker-compose-dev.yml logs misp-core
+        exit 1
+      fi
 
-        if [ "$STATUS" = "healthy" ]; then
-          echo "--> misp-core container is healthy!"
+    - echo "--> Executing plugin installer..."
+    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+
+    - |
+      echo "--> STEP 2: Validating MISP access (with plugin installed)..."
+      PLUGIN_SUCCESS=0
+      for i in $(seq 1 12); do
+        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
+        if [ "$HTTP_STATUS" -eq 200 ]; then
+          echo "SUCCESS: MISP with plugin /users/login returned HTTP 200!"
+          PLUGIN_SUCCESS=1
           break
-        elif [ "$STATUS" = "unhealthy" ]; then
-          echo "--> [ERROR] misp-core container reported unhealthy status."
-          docker compose -f docker-compose-dev.yml logs misp-core
-          exit 1
         fi
+        echo "Attempt $i/12 (Plugin MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
+        sleep 5
+      done
+
+      if [ "$PLUGIN_SUCCESS" -ne 1 ]; then
+        echo "ERROR: MISP failed to return HTTP 200 after plugin installation."
+        exit 1
+      fi
         sleep 5
       done
 
