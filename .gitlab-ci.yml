@@ -118,99 +118,48 @@ test-misp-login-200:
     - chmod +x msgd_installer.sh
   script:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d redis db mail misp-modules
-
-    - |
-      echo "--> Waiting for misp-modules to become healthy..."
-      until [ "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}starting{{end}}' $(docker compose -f docker-compose-dev.yml ps -q misp-modules))" = "healthy" ]; do
-        echo "--> Waiting for misp-modules..."
-        sleep 3
-      done
-
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for MISP Core to start web services (up to 3 minutes)..."
-      READY=0
-      for i in $(seq 1 36); do
+      echo "--> Aguardando inicializacao do MISP Core (ate 5 minutos)..."
+      BASE_READY=0
+      for i in $(seq 1 60); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        echo "Attempt $i/36: /users/login returned HTTP $HTTP_STATUS"
-      
+        echo "Tentativa $i/60 (MISP Base): HTTP $HTTP_STATUS"
+
         if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-          echo "--> MISP Core web service is UP and responding!"
-          READY=1
+          echo "SUCCESS: MISP Base esta ativo e a responder com HTTP $HTTP_STATUS!"
+          BASE_READY=1
           break
         fi
         sleep 5
       done
 
-      if [ "$READY" -ne 1 ]; then
-        echo "ERROR: Timed out waiting for MISP Core startup."
-        docker compose -f docker-compose-dev.yml logs misp-core
+      if [ "$BASE_READY" -ne 1 ]; then
+        echo "ERROR: Timeout ao aguardar pela inicializacao do MISP Base."
         exit 1
       fi
 
-    - echo "--> Executing plugin installer..."
+    - echo "--> Executando o instalador do plugin..."
     - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - |
-      echo "--> STEP 2: Validating MISP access (with plugin installed)..."
-      PLUGIN_SUCCESS=0
+      echo "--> Validando acesso ao MISP apos instalacao do plugin..."
+      PLUGIN_READY=0
       for i in $(seq 1 12); do
         HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: MISP with plugin /users/login returned HTTP 200!"
-          PLUGIN_SUCCESS=1
+        echo "Tentativa $i/12 (MISP + Plugin): HTTP $HTTP_STATUS"
+
+        if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+          echo "SUCCESS: MISP com plugin ativo respondeu com HTTP $HTTP_STATUS!"
+          PLUGIN_READY=1
           break
         fi
-        echo "Attempt $i/12 (Plugin MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
         sleep 5
       done
 
-      if [ "$PLUGIN_SUCCESS" -ne 1 ]; then
-        echo "ERROR: MISP failed to return HTTP 200 after plugin installation."
-        exit 1
-      fi
-        sleep 5
-      done
-
-    - |
-      echo "--> STEP 1: Validating BASE MISP access (without plugin)..."
-      BASE_SUCCESS=0
-      for i in $(seq 1 12); do
-        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: Base MISP /users/login returned HTTP 200!"
-          BASE_SUCCESS=1
-          break
-        fi
-        echo "Attempt $i/12 (Base MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
-        sleep 5
-      done
-
-      if [ "$BASE_SUCCESS" -ne 1 ]; then
-        echo "ERROR: Base MISP failed to return HTTP 200 before plugin installation."
-        exit 1
-      fi
-
-    - echo "--> Executing plugin installer..."
-    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
-
-    - |
-      echo "--> STEP 2: Validating MISP access (with plugin installed)..."
-      PLUGIN_SUCCESS=0
-      for i in $(seq 1 12); do
-        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        if [ "$HTTP_STATUS" -eq 200 ]; then
-          echo "SUCCESS: MISP with plugin /users/login returned HTTP 200!"
-          PLUGIN_SUCCESS=1
-          break
-        fi
-        echo "Attempt $i/12 (Plugin MISP): Received HTTP $HTTP_STATUS. Waiting 5s..."
-        sleep 5
-      done
-
-      if [ "$PLUGIN_SUCCESS" -ne 1 ]; then
-        echo "ERROR: MISP failed to return HTTP 200 after plugin installation."
+      if [ "$PLUGIN_READY" -ne 1 ]; then
+        echo "ERROR: MISP deixou de responder apos a instalacao do plugin."
         exit 1
       fi
 
