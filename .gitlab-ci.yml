@@ -70,8 +70,10 @@ eslint-js:
   stage: test
   image: node:latest
   needs: []
+  variables:
+    ESLINT_USE_FLAT_CONFIG: "false"
   script:
-    - npx eslint MsgdPlug/webroot/js/
+    - npx eslint@8 MsgdPlug/webroot/js/
 
 yamllint:
   stage: test
