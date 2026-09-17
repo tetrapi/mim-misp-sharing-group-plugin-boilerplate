@@ -78,7 +78,7 @@ yamllint:
   image: registry.gitlab.com/pipeline-components/yamllint:latest
   needs: []
   script:
-    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable}}" .'
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
 
 prettier:
   stage: test
@@ -98,23 +98,31 @@ test-misp-login-200:
     - docker:dind
   variables:
     DOCKER_TLS_CERTDIR: ""
-    BASE_URL: "https://localhost"
-    CRON_PULLALL: "false"
-    CRON_PUSHALL: "false"
-    DISABLE_IPV6: "false"
   needs: []
   before_script:
     - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
-    # Enforce mandatory environment variables in .env if missing
-    - grep -q "^BASE_URL=" .env || echo "BASE_URL=https://localhost" >> .env
-    - grep -q "^CRON_PULLALL=" .env || echo "CRON_PULLALL=false" >> .env
-    - grep -q "^CRON_PUSHALL=" .env || echo "CRON_PUSHALL=false" >> .env
-    - grep -q "^DISABLE_IPV6=" .env || echo "DISABLE_IPV6=false" >> .env
+    - |
+      # Inject critical fallbacks into .env to prevent startup failure
+      ENV_DEFAULTS=(
+        "BASE_URL=https://localhost"
+        "MODULES_COMMIT=main"
+        "DISABLE_SSL_REDIRECT=false"
+        "DISABLE_CA_REFRESH=false"
+        "CRON_PULLALL=false"
+        "CRON_PUSHALL=false"
+        "DISABLE_IPV6=false"
+      )
+      for entry in "${ENV_DEFAULTS[@]}"; do
+        key="${entry%%=*}"
+        grep -q "^${key}=" .env || echo "$entry" >> .env
+      done
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
-    - docker compose -f docker-compose-dev.yml up -d
+    # 1. Bring up supporting services first to let misp-modules complete initialization
+    - docker compose -f docker-compose-dev.yml up -d redis db mail misp-modules
+    - docker compose -f docker-compose-dev.yml up -d misp-core
 
     - |
       echo "--> Waiting for misp-core container ID..."
@@ -156,6 +164,7 @@ test-misp-login-200:
       echo "ERROR: Timed out waiting for HTTP 200 response."
       exit 1
   after_script:
+    - docker compose -f docker-compose-dev.yml logs misp-modules || true
     - docker compose -f docker-compose-dev.yml logs misp-core || true
     - docker compose -f docker-compose-dev.yml down -v || true
 
