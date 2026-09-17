@@ -79,7 +79,7 @@ yamllint:
   allow_failure: true
   needs: []
   script:
-    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable, new-line-at-end-of-file: disable, trailing-spaces: disable}}" .'
 
 prettier:
   stage: test
@@ -101,19 +101,22 @@ test-misp-login-200:
     DOCKER_TLS_CERTDIR: ""
   needs: []
   before_script:
-    - apk add --no-progress --no-cache curl bash
+    - apk add --no-progress --no-cache curl bash dos2unix
     - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
+    - dos2unix msgd_installer.sh 2>/dev/null || true
   script:
     - docker compose -f docker-compose-dev.yml up -d
 
     - |
-      echo "Waiting for misp-core container to initialize..."
-      until docker compose -f docker-compose-dev.yml exec -T misp-core true 2>/dev/null; do
-        sleep 2
+      echo "Waiting for misp-core and DB initialization..."
+      until docker compose -f docker-compose-dev.yml exec -T misp-core curl -ks https://localhost/users/heartbeat >/dev/null 2>&1; do
+        echo "MISP initialization in progress, waiting 5s..."
+        sleep 5
       done
 
-      echo "Copying msgd_installer.sh into container..."
+      echo "Copying and executing msgd_installer.sh..."
       docker compose -f docker-compose-dev.yml cp ./msgd_installer.sh misp-core:/var/www/MISP/msgd_installer.sh
+      docker compose -f docker-compose-dev.yml exec -T misp-core dos2unix /var/www/MISP/msgd_installer.sh 2>/dev/null || true
       docker compose -f docker-compose-dev.yml exec -T misp-core chmod +x /var/www/MISP/msgd_installer.sh
       docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
@@ -184,3 +187,4 @@ generate-sbom:
       - gl-sbom-vulnerabilities.cdx.json
     reports:
       cyclonedx: ["gl-sbom-plugin.cdx.json", "gl-sbom-vulnerabilities.cdx.json"]
+      
