@@ -74,7 +74,7 @@ services:
       db:
         condition: service_healthy
       misp-modules:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: curl -ks ${BASE_URL:-https://localhost}/users/heartbeat > /dev/null || exit 1
       interval: 2s
