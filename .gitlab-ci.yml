@@ -119,13 +119,13 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for initial MISP Core startup (up to 7.5 minutes)..."
+      echo "--> Waiting for initial MISP Core startup (up to 15 minutes)..."
       BASE_READY=0
-      for i in $(seq 1 90); do
-        # tr -d '\r\n' remove caracteres ocultos retornados pelo docker exec
-        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login | tr -d '\r\n' || echo "000")
+      for i in $(seq 1 180); do
+        # Executa o curl de forma limpa dentro de um sub-bash no container e remove quaisquer espaços ou quebras de linha
+        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash -c 'curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login' 2>/dev/null | tr -d '\r\n\t ' || echo "000")
       
-        echo "Attempt $i/90 (Base MISP): HTTP '$HTTP_STATUS'"
+        echo "Attempt $i/180 (Base MISP): HTTP '$HTTP_STATUS'"
       
         if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
           echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
@@ -137,6 +137,8 @@ test-misp-login-200:
       
       if [ "$BASE_READY" -ne 1 ]; then
         echo "ERROR: Timed out waiting for Base MISP initialization."
+        # Imprime as últimas 50 linhas do log para ajudar a perceber onde bloqueou caso falhe de novo
+        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
         exit 1
       fi
 
