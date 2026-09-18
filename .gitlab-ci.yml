@@ -119,30 +119,20 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for initial MISP Core startup (up to 7.5 minutes)..."
+      echo "--> Waiting for initial MISP Core startup (up to 10 minutes)..."
       BASE_READY=0
-      for i in $(seq 1 90); do
-        # 1. Tenta aceder via hostname 'docker' (padrao do GitLab DinD)
-        HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" https://docker/users/login || echo "000")
+      for i in $(seq 1 200); do
+        # Test directly inside misp-core targeting 127.0.0.1
+        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login 2>/dev/null || echo "000")
       
-        # 2. Se falhar no HTTPS, tenta HTTP no host 'docker'
-        if [ "$HTTP_STATUS" -eq "000" ]; then
-          HTTP_STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" http://docker/users/login || echo "000")
-        fi
+        echo "Attempt $i/200 (Base MISP): HTTP $HTTP_STATUS"
       
-        # 3. Fallback: usa wget diretamente dentro do container misp-core
-        if [ "$HTTP_STATUS" -eq "000" ]; then
-          HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core wget --no-check-certificate --spider -S https://127.0.0.1/users/login 2>&1 | grep -oE "HTTP/[0-9.]+ [0-9]+" | tail -n1 | awk '{print $2}' || echo "000")
-        fi
-  
-        echo "Attempt $i/90 (Base MISP): Received HTTP $HTTP_STATUS"
-  
         if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
           echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
           BASE_READY=1
           break
         fi
-        sleep 5
+        sleep 3
       done
       
       if [ "$BASE_READY" -ne 1 ]; then
