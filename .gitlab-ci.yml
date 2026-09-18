@@ -173,9 +173,9 @@ test-misp-login-200:
       fi
 
   after_script:
-    - docker compose -f docker-compose-dev.yml logs misp-modules || true
-    - docker compose -f docker-compose-dev.yml logs misp-core || true
-    - docker compose -f docker-compose-dev.yml down -v || true
+    - docker compose --env-file .env -f docker-compose-dev.yml logs misp-modules || true
+    - docker compose --env-file .env -f docker-compose-dev.yml logs misp-core || true
+    - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
 
 # ==============================================================================
 # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
