@@ -103,7 +103,12 @@ test-misp-installer:
   needs: []
   before_script:
     - apk add --no-progress --no-cache bash dos2unix
-    - cp example.env .env 2>/dev/null || touch .env
+    - |
+      if [ ! -f .env ] && [ -f example.env ]; then
+        cp example.env .env
+      elif [ ! -f .env ]; then
+        touch .env
+      fi
     - |
       cat << 'EOF' >> .env
       CORE_TAG=latest
@@ -122,34 +127,45 @@ test-misp-installer:
     - echo "--> Starting containers..."
     - docker compose --env-file .env -f docker-compose-dev.yml up -d
 
-    - echo "--> Starting live log stream for misp-core..."
+    - echo "--> Streaming live logs for misp-core..."
     - docker compose --env-file .env -f docker-compose-dev.yml logs -f misp-core &
     - LOGS_PID=$!
 
     - |
+      # Silent wait loop matching .dev wait_for_healthy logic
       BASE_READY=0
       for i in $(seq 1 240); do
         MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core 2>/dev/null)
+      
         if [ -n "$MISP_CONTAINER" ]; then
-          CONTAINER_STATE=$(docker inspect --format='{{.State.Status}}' "$MISP_CONTAINER" 2>/dev/null || echo "unknown")
-          if [ "$CONTAINER_STATE" = "running" ]; then
+          STATUS=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" "$MISP_CONTAINER" 2>/dev/null || echo "unknown")
+
+          if [ "$STATUS" = "healthy" ]; then
+            echo "--> Container misp-core is healthy!"
             BASE_READY=1
             break
+          elif [ "$STATUS" = "missing" ]; then
+            echo "--> [WARNING] No health check defined in compose. Applying 15s startup buffer..."
+            sleep 15
+            BASE_READY=1
+            break
+          elif [ "$STATUS" = "unhealthy" ]; then
+            echo "--> [ERROR] Container reported unhealthy status."
+            kill $LOGS_PID 2>/dev/null || true
+            exit 1
           fi
         fi
         sleep 5
       done
 
       if [ "$BASE_READY" -ne 1 ]; then
-        echo "ERROR: Timeout reached waiting for misp-core container."
+        echo "ERROR: Timeout reached waiting for misp-core."
         kill $LOGS_PID 2>/dev/null || true
         exit 1
       fi
 
-    - echo "--> Copying and executing the plugin installer..."
-    - MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core)
-    - docker cp msgd_installer.sh $MISP_CONTAINER:/var/www/MISP/msgd_installer.sh
-    - docker exec $MISP_CONTAINER bash /var/www/MISP/msgd_installer.sh --auto
+    - echo "--> Executing installer..."
+    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
 
     - echo "--> Plugin installation completed successfully!"
     - kill $LOGS_PID 2>/dev/null || true
