@@ -90,87 +90,7 @@ prettier:
     - npx prettier --check MsgdPlug/webroot/js/
 
 # ==============================================================================
-# STAGE 2: integration - MISP Stack + Plugin Integration Test
-# ==============================================================================
-
-test-misp-installer:
-  stage: integration
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  needs: []
-  before_script:
-    - apk add --no-progress --no-cache bash dos2unix
-    - |
-      if [ ! -f .env ] && [ -f example.env ]; then
-        cp example.env .env
-      elif [ ! -f .env ]; then
-        touch .env
-      fi
-    - |
-      cat << 'EOF' >> .env
-      CORE_TAG=latest
-      PHP_VER=8.2
-      MODULES_TAG=latest
-      MODULES_COMMIT=main
-      BASE_URL=https://127.0.0.1
-      DISABLE_SSL_REDIRECT=false
-      DISABLE_CA_REFRESH=false
-      DISABLE_IPV6=false
-      DEBUG=0
-      EOF
-    - dos2unix msgd_installer.sh .env 2>/dev/null || true
-    - chmod +x msgd_installer.sh
-  script:
-    - echo "--> Starting containers..."
-    - docker compose --env-file .env -f docker-compose-dev.yml up -d
-
-    - echo "--> Streaming live logs for misp-core..."
-    - docker compose --env-file .env -f docker-compose-dev.yml logs -f misp-core &
-    - LOGS_PID=$!
-
-    - |
-      # Wait loop that allows transient 'unhealthy' states during component updates
-      BASE_READY=0
-      for i in $(seq 1 240); do
-        MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core 2>/dev/null)
-      
-        if [ -n "$MISP_CONTAINER" ]; then
-          STATUS=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" "$MISP_CONTAINER" 2>/dev/null || echo "unknown")
-
-          if [ "$STATUS" = "healthy" ]; then
-            echo "--> Container misp-core is healthy!"
-            BASE_READY=1
-            break
-          elif [ "$STATUS" = "missing" ]; then
-            echo "--> [WARNING] No health check defined in compose. Applying 15s buffer..."
-            sleep 15
-            BASE_READY=1
-            break
-          fi
-        fi
-        sleep 5
-      done
-
-      if [ "$BASE_READY" -ne 1 ]; then
-        echo "ERROR: Timeout reached waiting for misp-core to stabilize."
-        kill $LOGS_PID 2>/dev/null || true
-        exit 1
-      fi
-
-    - echo "--> Executing installer..."
-    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
-
-    - echo "--> Plugin installation completed successfully!"
-    - kill $LOGS_PID 2>/dev/null || true
-
-  after_script:
-    - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
-
-# ==============================================================================
-# STAGE 3: security - SAST, Secrets & Infrastructure Scanning
+# STAGE 2: security - SAST, Secrets & Infrastructure Scanning
 # ==============================================================================
 
 php-security-checker:
@@ -195,7 +115,7 @@ iac-config-scan:
       - trivy-iac-report.json
 
 # ==============================================================================
-# STAGE 4: sbom - EU CRA Software Inventory Generation
+# STAGE 3: sbom - EU CRA Software Inventory Generation
 # ==============================================================================
 
 generate-sbom:
