@@ -12,11 +12,14 @@ declare(strict_types=1);
 App::uses('AppHelper', 'View/Helper');
 App::uses('HtmlHelper', 'View/Helper');
 App::uses('View', 'View');
+App::uses('CakeRequest', 'Network');
 
 /**
  * Helper responsible for injecting plugin assets, templates, and configs into MISP views.
  *
  * @property View $_View
+ * @property HtmlHelper $Html
+ * @property CakeRequest $request
  *
  * @package    MsgdPlug
  * @subpackage MsgdPlug.View.Helper
@@ -95,37 +98,37 @@ final class MsgdInjectorHelper extends AppHelper
     private function buildUrlMap(): array
     {
         return [
-            MsgdPluginActionEnum::CHECK_USER_PERMISSION->getRouteKey() => $this->Html->url([
+            MsgdPluginActionEnum::CHECK_USER_PERMISSION->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
                 'action' => MsgdPluginActionEnum::CHECK_USER_PERMISSION->value,
             ]),
 
-            MsgdPluginActionEnum::PROCESS_GROUPS->getRouteKey() => $this->Html->url([
+            MsgdPluginActionEnum::PROCESS_GROUPS->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
                 'action' => MsgdPluginActionEnum::PROCESS_GROUPS->value,
             ]),
 
-            MsgdPluginActionEnum::GET_SHARING_GROUPS->getRouteKey() => $this->Html->url([
+            MsgdPluginActionEnum::GET_SHARING_GROUPS->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
                 'action' => MsgdPluginActionEnum::GET_SHARING_GROUPS->value,
             ]),
 
-            MsgdPluginActionEnum::CHECK_BLUEPRINT->getRouteKey() => $this->Html->url([
+            MsgdPluginActionEnum::CHECK_BLUEPRINT->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
                 'action' => MsgdPluginActionEnum::CHECK_BLUEPRINT->value,
             ]),
 
-            MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->getRouteKey() => $this->Html->url([
+            MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
                 'action' => MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->value,
             ]),
 
-            MsgdMispActionEnum::VIEW->getRouteKey() => $this->Html->url([
+            MsgdMispActionEnum::VIEW->getRouteKey() => (string) $this->Html->url([
                 'plugin' => false,
                 'controller' => 'sharing_groups',
                 'action' => MsgdMispActionEnum::VIEW->value,
@@ -153,14 +156,13 @@ final class MsgdInjectorHelper extends AppHelper
         $elementPath = $elementFile->getPath();
 
         try {
-            $renderedOutput = $this->_View->element($elementPath, $elementData);
-
-            return is_string($renderedOutput) ? $renderedOutput : '';
+            return (string) $this->_View->element($elementPath, $elementData);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
                 sprintf("[MsgdInjectorHelper] Rendering View element '%s'", $elementPath)
             );
+
             return '';
         }
     }

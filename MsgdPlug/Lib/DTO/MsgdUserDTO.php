@@ -58,12 +58,27 @@ readonly final class MsgdUserDTO
             ? $data['Organisation']
             : [];
 
+        $rawId = $data['id'] ?? 0;
+        $id = is_numeric($rawId) ? (int)$rawId : 0;
+
+        $rawOrgId = $data['org_id'] ?? 0;
+        $orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
+
+        $rawEmail = $data['email'] ?? '';
+        $email = is_scalar($rawEmail) ? (string)$rawEmail : '';
+
+        $rawOrgName = $organisation['name'] ?? '';
+        $orgName = is_scalar($rawOrgName) ? (string)$rawOrgName : '';
+
+        $rawOrgUuid = $organisation['uuid'] ?? '';
+        $orgUuid = is_scalar($rawOrgUuid) ? (string)$rawOrgUuid : '';
+
         return new self(
-            id: (int)($data['id'] ?? 0),
-            orgId: (int)($data['org_id'] ?? 0),
-            email: MsgdSanitizerUtility::sanitizeString((string)($data['email'] ?? '')),
-            orgName: MsgdSanitizerUtility::sanitizeString((string)($organisation['name'] ?? '')),
-            orgUuid: MsgdSanitizerUtility::sanitizeString((string)($organisation['uuid'] ?? '')),
+            id: $id,
+            orgId: $orgId,
+            email: MsgdSanitizerUtility::sanitizeString($email),
+            orgName: MsgdSanitizerUtility::sanitizeString($orgName),
+            orgUuid: MsgdSanitizerUtility::sanitizeString($orgUuid),
             isSiteAdmin: (bool)($role['perm_site_admin'] ?? false),
             canUseSharingGroups: (bool)($role['perm_sharing_group'] ?? false),
             canSync: (bool)($role['perm_sync'] ?? false),

@@ -84,7 +84,7 @@ final class MsgdApiControllerServiceTest extends TestCase
      * Creates a blueprint DTO.
      *
      * @param int $sharingGroupId
-     * @param array $identifiers
+     * @param array<int, string|int> $identifiers
      *
      * @return MsgdBlueprintDTO
      */
@@ -93,13 +93,13 @@ final class MsgdApiControllerServiceTest extends TestCase
         array $identifiers = []
     ): MsgdBlueprintDTO {
         return new MsgdBlueprintDTO(
+            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
             id: 5,
             uuid: self::UUID_1,
             name: 'Test Blueprint',
             userId: 1,
             orgId: 10,
-            sharingGroupId: $sharingGroupId,
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers)
+            sharingGroupId: $sharingGroupId
         );
     }
 
@@ -375,6 +375,7 @@ final class MsgdApiControllerServiceTest extends TestCase
         $result = $this->createService($sgLib)
             ->processSingleGroup($this->createUser(), self::UUID_1);
 
+        assert($result instanceof MsgdProcessResultDTO);
         $this->assertSame(10, $result->sharingGroupId);
     }
 
@@ -393,6 +394,7 @@ final class MsgdApiControllerServiceTest extends TestCase
         $result = $this->createService($sgLib)
             ->processSingleGroup($this->createUser(), 10);
 
+        assert($result instanceof MsgdProcessResultDTO);
         $this->assertSame(10, $result->sharingGroupId);
     }
 

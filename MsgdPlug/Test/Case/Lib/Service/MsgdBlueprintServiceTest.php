@@ -62,7 +62,7 @@ final class MsgdBlueprintServiceTest extends TestCase
      *
      * @param int $id
      * @param int $sharingGroupId
-     * @param array $identifiers
+     * @param array<int, string|int> $identifiers
      *
      * @return MsgdBlueprintDTO
      */
@@ -72,13 +72,13 @@ final class MsgdBlueprintServiceTest extends TestCase
         array $identifiers = []
     ): MsgdBlueprintDTO {
         return new MsgdBlueprintDTO(
+            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
             id: $id,
             uuid: self::UUID_1,
             name: 'Test Blueprint',
             userId: 1,
             orgId: 10,
-            sharingGroupId: $sharingGroupId,
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers)
+            sharingGroupId: $sharingGroupId
         );
     }
 
@@ -210,7 +210,7 @@ final class MsgdBlueprintServiceTest extends TestCase
         ]);
 
         $result = (new MsgdBlueprintService($model))
-            ->getGeneratedGroups($this->createUser());
+            ->getGeneratedGroups();
 
         $this->assertSame([10, 20], $result);
     }

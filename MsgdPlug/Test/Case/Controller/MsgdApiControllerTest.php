@@ -9,6 +9,8 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
+use PHPUnit\Framework\MockObject\MockBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -67,25 +69,40 @@ final class MsgdApiControllerTest extends TestCase
     ): MsgdApiController {
         $_SERVER['REQUEST_METHOD'] = $method;
 
+        /** @var MockBuilder<MsgdApiController> $builder */
+        $builder = $this->getMockBuilder(MsgdApiController::class);
+
         /** @var MsgdApiController&MockObject $controller */
-        $controller = $this->getMockBuilder(MsgdApiController::class)
+        $controller = $builder
             ->onlyMethods(['validateRequest'])
             ->getMock();
 
-        $controller->method('validateRequest')->willReturn($isRequestValid);
+        /** @var InvocationMocker $validateMocker */
+        $validateMocker = $controller->method('validateRequest');
+        $validateMocker->willReturn($isRequestValid);
 
         $controller->request = new CakeRequest();
         $controller->response = new CakeResponse();
 
-        $authMock = $this->getMockBuilder(stdClass::class)
+        /** @var MockBuilder<stdClass> $authBuilder */
+        $authBuilder = $this->getMockBuilder(stdClass::class);
+
+        /** @var MockObject $authMock */
+        $authMock = $authBuilder
             ->addMethods(['user'])
             ->getMock();
 
-        $authMock->method('user')->willReturn($this->validUser());
+        /** @var InvocationMocker $userMocker */
+        $userMocker = $authMock->method('user');
+        $userMocker->willReturn($this->validUser());
 
-        $controller->Auth = $authMock;
+        /** @var AuthComponent $authComponent */
+        $authComponent = $authMock;
+        $controller->Auth = $authComponent;
 
-        $serviceMock->method('isUsingIds')->willReturn($useIds);
+        /** @var InvocationMocker $isUsingIdsMocker */
+        $isUsingIdsMocker = $serviceMock->method('isUsingIds');
+        $isUsingIdsMocker->willReturn($useIds);
 
         $reflection = new ReflectionClass(MsgdApiController::class);
         $property = $reflection->getProperty('msgdService');
@@ -102,9 +119,15 @@ final class MsgdApiControllerTest extends TestCase
      */
     private function createServiceMock(): MockObject
     {
-        return $this->getMockBuilder(MsgdApiControllerService::class)
+        /** @var MockBuilder<MsgdApiControllerService> $builder */
+        $builder = $this->getMockBuilder(MsgdApiControllerService::class);
+
+        /** @var MockObject $mock */
+        $mock = $builder
             ->disableOriginalConstructor()
             ->getMock();
+
+        return $mock;
     }
 
     /**
@@ -141,10 +164,13 @@ final class MsgdApiControllerTest extends TestCase
      */
     private function decodeResponse(CakeResponse $response): array
     {
-        $decoded = json_decode($response->body(), true);
+        $body = $response->body();
+        $bodyString = $body;
+        $decoded = json_decode($bodyString, true);
 
         $this->assertIsArray($decoded);
 
+        /** @var array<string, mixed> $decoded */
         return $decoded;
     }
 
@@ -175,8 +201,10 @@ final class MsgdApiControllerTest extends TestCase
     public function testCheckUserPermissionReturns200(): void
     {
         $serviceMock = $this->createServiceMock();
-        $serviceMock->expects($this->once())
-            ->method('hasSharingGroupAccess')
+
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('hasSharingGroupAccess')
             ->with($this->isInstanceOf(MsgdUserDTO::class), false)
             ->willReturn(true);
 
@@ -200,8 +228,10 @@ final class MsgdApiControllerTest extends TestCase
     public function testCheckUserPermissionReturns403OnForbiddenException(): void
     {
         $serviceMock = $this->createServiceMock();
-        $serviceMock->expects($this->once())
-            ->method('hasSharingGroupAccess')
+
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('hasSharingGroupAccess')
             ->with($this->isInstanceOf(MsgdUserDTO::class), false)
             ->willThrowException(new ForbiddenException('Access denied.'));
 
@@ -224,8 +254,10 @@ final class MsgdApiControllerTest extends TestCase
     public function testCheckUserPermissionReturns500OnThrowable(): void
     {
         $serviceMock = $this->createServiceMock();
-        $serviceMock->expects($this->once())
-            ->method('hasSharingGroupAccess')
+
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('hasSharingGroupAccess')
             ->with($this->isInstanceOf(MsgdUserDTO::class), false)
             ->willThrowException(new RuntimeException('Service failure.'));
 
@@ -257,8 +289,9 @@ final class MsgdApiControllerTest extends TestCase
             ['id' => 1, 'name' => 'Group 1'],
         ];
 
-        $serviceMock->expects($this->once())
-            ->method('getSharingGroupsByGeneratedBlueprintGroup')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('getSharingGroupsByGeneratedBlueprintGroup')
             ->with($this->isInstanceOf(MsgdUserDTO::class), self::GROUP_ID_1)
             ->willReturn($groups);
 
@@ -311,8 +344,9 @@ final class MsgdApiControllerTest extends TestCase
             ['id' => 1, 'name' => 'Group 1'],
         ];
 
-        $serviceMock->expects($this->once())
-            ->method('getAvailableSharingGroups')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('getAvailableSharingGroups')
             ->with($this->isInstanceOf(MsgdUserDTO::class), false)
             ->willReturn($groups);
 
@@ -377,8 +411,10 @@ final class MsgdApiControllerTest extends TestCase
     public function testGetSharingGroupsReturns500OnThrowable(): void
     {
         $serviceMock = $this->createServiceMock();
-        $serviceMock->expects($this->once())
-            ->method('getAvailableSharingGroups')
+
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('getAvailableSharingGroups')
             ->with($this->isInstanceOf(MsgdUserDTO::class), false)
             ->willThrowException(new RuntimeException('Service failure.'));
 
@@ -428,12 +464,14 @@ final class MsgdApiControllerTest extends TestCase
     ): void {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('isUsingIds')
+        /** @var InvocationMocker $expectation1 */
+        $expectation1 = $serviceMock->expects($this->once());
+        $expectation1->method('isUsingIds')
             ->willReturn($useIds);
 
-        $serviceMock->expects($this->once())
-            ->method('checkBlueprint')
+        /** @var InvocationMocker $expectation2 */
+        $expectation2 = $serviceMock->expects($this->once());
+        $expectation2->method('checkBlueprint')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 $this->isInstanceOf(MsgdCheckBlueprintDTO::class)
@@ -453,7 +491,7 @@ final class MsgdApiControllerTest extends TestCase
             ],
         ];
 
-        $controller->request->params['_Token']['key'] = 'next-token';
+        $controller->request->params['_Token'] = ['key' => 'next-token'];
 
         $response = $controller->checkBlueprint();
 
@@ -564,8 +602,9 @@ final class MsgdApiControllerTest extends TestCase
     {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('checkBlueprint')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('checkBlueprint')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 $this->isInstanceOf(MsgdCheckBlueprintDTO::class)
@@ -601,8 +640,9 @@ final class MsgdApiControllerTest extends TestCase
     {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('isUsingIds')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('isUsingIds')
             ->willThrowException(new RuntimeException('Service failure.'));
 
         $controller = $this->createController(
@@ -694,8 +734,9 @@ final class MsgdApiControllerTest extends TestCase
     ): void {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('processSingleGroup')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('processSingleGroup')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 $groups[0]
@@ -733,8 +774,9 @@ final class MsgdApiControllerTest extends TestCase
     {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('processSingleGroup')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('processSingleGroup')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 self::UUID_1
@@ -770,8 +812,9 @@ final class MsgdApiControllerTest extends TestCase
     {
         $serviceMock = $this->createServiceMock();
 
-        $serviceMock->expects($this->once())
-            ->method('isUsingIds')
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('isUsingIds')
             ->willThrowException(new RuntimeException('Service failure.'));
 
         $controller = $this->createController(

@@ -48,7 +48,11 @@ class MsgdApiControllerService
      */
     public function isUserWhiteList(): string
     {
-        return (string)Configure::read(MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value, '');
+        $rawWhitelist = Configure::read(
+            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value
+        );
+
+        return is_scalar($rawWhitelist) ? (string) $rawWhitelist : '';
     }
 
     /**
@@ -58,7 +62,7 @@ class MsgdApiControllerService
      */
     public function isUsingIds(): bool
     {
-        return (bool)Configure::read(MsgdPluginConfigEnum::USE_IDS->value, false);
+        return (bool)Configure::read(MsgdPluginConfigEnum::USE_IDS->value);
     }
 
     /**
@@ -196,7 +200,7 @@ class MsgdApiControllerService
             return null;
         }
 
-        if (!empty($targetSharingGroup) && isset($targetSharingGroup->id, $targetSharingGroup->name)) {
+        if ($targetSharingGroup instanceof MsgdSharingGroupDTO) {
             return new MsgdProcessResultDTO(
                 isNew: false,
                 hasBlueprint: false,
@@ -245,16 +249,14 @@ class MsgdApiControllerService
     ): MsgdProcessResultDTO {
         $hasPermission = $this->hasSharingGroupAccess($user, false);
         $mirrors = $this->sgLib->getMirrorGroups($user, $payload->groups);
-        $matchedExistingBlueprint = $this->bpLib->findBySharingGroupRules($user, $mirrors);
+        $matchedExistingBlueprint = $mirrors !== null
+            ? $this->bpLib->findBySharingGroupRules($user, $mirrors)
+            : null;
 
         $isNew = true;
         $associatedSharingGroupId = 0;
 
         $databaseTransaction = $this->bpLib->getDataSource();
-
-        if ($databaseTransaction === null) {
-            throw new RuntimeException('Unable to obtain database transaction handle for SharingGroupBlueprint.');
-        }
 
         $databaseTransaction->begin();
 
@@ -290,10 +292,7 @@ class MsgdApiControllerService
                 ? $this->sgLib->findById($user, $targetGroupIdToFetch)
                 : null;
 
-            if (
-                empty($updatedSharingGroupRecord)
-                || !isset($updatedSharingGroupRecord->id, $updatedSharingGroupRecord->name)
-            ) {
+            if (!$updatedSharingGroupRecord instanceof MsgdSharingGroupDTO) {
                 throw new RuntimeException(
                     'Blueprint execution or lookup returned an invalid ID, Sharing Group record not found.'
                 );

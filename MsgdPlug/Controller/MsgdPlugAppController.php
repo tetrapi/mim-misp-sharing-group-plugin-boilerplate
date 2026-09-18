@@ -20,21 +20,6 @@ App::uses('AppController', 'Controller');
  */
 class MsgdPlugAppController extends AppController
 {
-    public $RequestHandler = null;
-    public $Auth = null;
-    public $Security = null;
-
-    /**
-     * Framework components used across plugin endpoints.
-     *
-     * @var array<int, string>
-     */
-    public $components = [
-        'RequestHandler',
-        'Auth',
-        'Security',
-    ];
-
     /**
      * Sets default HTTP security headers and restricts unauthenticated access.
      *
@@ -44,23 +29,19 @@ class MsgdPlugAppController extends AppController
     {
         parent::beforeFilter();
 
-        if ($this->response !== null) {
-            $this->response->header('X-Content-Type-Options', 'nosniff');
-            $this->response->header('X-Frame-Options', 'SAMEORIGIN');
-            $this->response->header('X-XSS-Protection', '1; mode=block');
-            $this->response->header(
-                'Cache-Control',
-                'no-store, no-cache, must-revalidate, max-age=0'
-            );
-            $this->response->header('Pragma', 'no-cache');
-        }
+        $this->response->header('X-Content-Type-Options', 'nosniff');
+        $this->response->header('X-Frame-Options', 'SAMEORIGIN');
+        $this->response->header('X-XSS-Protection', '1; mode=block');
+        $this->response->header(
+            'Cache-Control',
+            'no-store, no-cache, must-revalidate, max-age=0'
+        );
+        $this->response->header('Pragma', 'no-cache');
 
-        $this->Auth?->deny('*');
+        $this->Auth->deny('*');
 
-        if ($this->Security !== null) {
-            $this->Security->csrfCheck = true;
-            $this->Security->validatePost = false; # false because we don't use backend forms
-        }
+        $this->Security->csrfCheck = true;
+        $this->Security->validatePost = false; # false because we don't use backend forms
     }
 
     /**
@@ -70,15 +51,14 @@ class MsgdPlugAppController extends AppController
      */
     protected function getCurrentUser(): ?MsgdUserDTO
     {
-        if ($this->Auth === null) {
+        $user = $this->Auth->user();
+
+        if (!is_array($user)) {
             return null;
         }
 
-        $user = $this->Auth->user();
-
-        return is_array($user)
-            ? MsgdUserDTO::fromArray($user)
-            : null;
+        /** @var array<string, mixed> $user */
+        return MsgdUserDTO::fromArray($user);
     }
 
     /**
@@ -115,9 +95,12 @@ class MsgdPlugAppController extends AppController
      */
     protected function appendNextToken(array $payload): array
     {
-        $nextToken = $this->request->params['_Token']['key'] ?? null;
+        $tokenParams = $this->request->params['_Token'] ?? null;
+        $nextToken = is_array($tokenParams) && isset($tokenParams['key'])
+            ? $tokenParams['key']
+            : null;
 
-        if ($nextToken !== null) {
+        if (is_scalar($nextToken)) {
             $payload['nextToken'] = (string)$nextToken;
         }
 

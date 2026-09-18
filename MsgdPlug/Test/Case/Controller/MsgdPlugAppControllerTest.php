@@ -23,6 +23,7 @@ if (class_exists('App')) {
     App::uses('CakeResponse', 'Network');
     App::uses('Controller', 'Controller');
     App::uses('AuthComponent', 'Controller/Component');
+    App::uses('SecurityComponent', 'Controller/Component');
 }
 
 /**
@@ -36,11 +37,11 @@ final class MsgdPlugAppControllerTest extends TestCase
     /**
      * Creates a controller test double.
      *
-     * @param MockObject|null $authMock Authentication component mock.
+     * @param (AuthComponent&MockObject)|null $authMock Authentication component mock.
      *
      * @return MsgdPlugAppController
      */
-    private function createController(?MockObject $authMock = null): MsgdPlugAppController
+    private function createController(AuthComponent|MockObject|null $authMock = null): MsgdPlugAppController
     {
         /** @var MsgdPlugAppController&MockObject $controller */
         $controller = $this->getMockBuilder(MsgdPlugAppController::class)
@@ -59,12 +60,14 @@ final class MsgdPlugAppControllerTest extends TestCase
      *
      * @param mixed $user Authentication result.
      *
-     * @return MockObject
+     * @return AuthComponent&MockObject
      */
-    private function createAuthMock(mixed $user = null): MockObject
+    private function createAuthMock(mixed $user = null): AuthComponent&MockObject
     {
-        $authMock = $this->getMockBuilder(stdClass::class)
-            ->addMethods(['user', 'deny'])
+        /** @var AuthComponent&MockObject $authMock */
+        $authMock = $this->getMockBuilder('AuthComponent')
+            ->disableOriginalConstructor()
+            ->onlyMethods(['user', 'deny'])
             ->getMock();
 
         $authMock->method('user')->willReturn($user);
@@ -110,7 +113,8 @@ final class MsgdPlugAppControllerTest extends TestCase
         $controller->response = new CakeResponse();
         $controller->Auth = $this->createAuthMock($this->validUser());
 
-        $security = new stdClass();
+        /** @phpstan-ignore arguments.count */
+        $security = new SecurityComponent();
         $security->csrfCheck = false;
         $security->validatePost = true;
         $controller->Security = $security;
@@ -129,6 +133,8 @@ final class MsgdPlugAppControllerTest extends TestCase
     public function testBeforeFilterConfiguresSecurityHeaders(): void
     {
         $controller = $this->createController();
+
+        /** @phpstan-ignore assign.propertyType */
         $controller->Security = null;
 
         $controller->beforeFilter();
@@ -192,6 +198,8 @@ final class MsgdPlugAppControllerTest extends TestCase
     public function testGetCurrentUserReturnsNullWithoutAuth(): void
     {
         $controller = $this->createController();
+
+        /** @phpstan-ignore assign.propertyType */
         $controller->Auth = null;
 
         $reflection = new ReflectionClass(MsgdPlugAppController::class);
@@ -327,6 +335,7 @@ final class MsgdPlugAppControllerTest extends TestCase
         $method = $reflection->getMethod('appendNextToken');
         $method->setAccessible(true);
 
+        /** @var array<string, mixed> $payload */
         $payload = $method->invoke($controller, [
             'status' => 'success',
         ]);
@@ -375,6 +384,7 @@ final class MsgdPlugAppControllerTest extends TestCase
         $method = $reflection->getMethod('buildJsonResponse');
         $method->setAccessible(true);
 
+        /** @var CakeResponse $response */
         $response = $method->invoke(
             $controller,
             [
@@ -388,7 +398,7 @@ final class MsgdPlugAppControllerTest extends TestCase
         $this->assertSame(201, $response->statusCode());
         $this->assertSame('application/json', $response->type());
 
-        $decoded = json_decode($response->body(), true);
+        $decoded = json_decode((string) $response->body(), true);
 
         $this->assertIsArray($decoded);
         $this->assertSame('success', $decoded['status']);
@@ -410,6 +420,7 @@ final class MsgdPlugAppControllerTest extends TestCase
         $method = $reflection->getMethod('buildJsonResponse');
         $method->setAccessible(true);
 
+        /** @var CakeResponse $response */
         $response = $method->invoke(
             $controller,
             [

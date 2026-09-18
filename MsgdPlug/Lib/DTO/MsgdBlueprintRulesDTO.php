@@ -62,6 +62,7 @@ readonly final class MsgdBlueprintRulesDTO
             throw new InvalidArgumentException('Blueprint rules must be a valid JSON object.');
         }
 
+        /** @var array<string, mixed> $parsed */
         $this->raw = $parsed;
 
         $andConditions = $parsed['AND'] ?? [];

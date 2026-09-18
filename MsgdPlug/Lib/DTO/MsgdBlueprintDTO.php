@@ -45,22 +45,44 @@ class MsgdBlueprintDTO
             throw new InvalidArgumentException('Sharing Group Blueprint data must be an array.');
         }
 
-        $uuid = (string)($groupData['uuid'] ?? '');
+        $rawUuid = $groupData['uuid'] ?? '';
+        $uuid = is_scalar($rawUuid) ? (string)$rawUuid : '';
 
         if ($uuid !== '' && !MsgdSanitizerUtility::isValidUuid($uuid)) {
             throw new InvalidArgumentException('Sharing Group Blueprint contains an invalid UUID.');
         }
 
-        $name = MsgdSanitizerUtility::sanitizeString((string)($groupData['name'] ?? ''));
+        $rawName = $groupData['name'] ?? '';
+        $name = MsgdSanitizerUtility::sanitizeString(is_scalar($rawName) ? (string)$rawName : '');
+
+        $rawId = $groupData['id'] ?? 0;
+        $id = is_numeric($rawId) ? (int)$rawId : 0;
+
+        $rawUserId = $groupData['user_id'] ?? 0;
+        $userId = is_numeric($rawUserId) ? (int)$rawUserId : 0;
+
+        $rawOrgId = $groupData['org_id'] ?? 0;
+        $orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
+
+        $rawSharingGroupId = $groupData['sharing_group_id'] ?? 0;
+        $sharingGroupId = is_numeric($rawSharingGroupId) ? (int)$rawSharingGroupId : 0;
+
+        $rawRules = $groupData['rules'] ?? [];
+        if (!is_array($rawRules) && !is_string($rawRules)) {
+            $rawRules = [];
+        }
+
+        /** @var array<string, mixed>|string $rules */
+        $rules = $rawRules;
 
         return new self(
-            id: (int)($groupData['id'] ?? 0),
+            rules: new MsgdBlueprintRulesDTO($rules),
+            id: $id,
             uuid: $uuid,
             name: $name,
-            userId: (int)($groupData['user_id'] ?? 0),
-            orgId: (int)($groupData['org_id'] ?? 0),
-            sharingGroupId: (int)($groupData['sharing_group_id'] ?? 0),
-            rules: new MsgdBlueprintRulesDTO($groupData['rules'] ?? []),
+            userId: $userId,
+            orgId: $orgId,
+            sharingGroupId: $sharingGroupId,
         );
     }
 

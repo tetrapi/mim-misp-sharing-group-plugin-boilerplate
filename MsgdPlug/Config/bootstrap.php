@@ -89,14 +89,14 @@ if ($isPluginEnabled) {
                 return;
             }
 
-            /** @var View|object|null $viewInstance */
+            /** @var View|null $viewInstance */
             $viewInstance = $renderEvent->subject();
 
-            if (!is_object($viewInstance) || !isset($viewInstance->request)) {
+            if (!$viewInstance instanceof View) {
                 return;
             }
 
-            $params = $viewInstance->request->params ?? [];
+            $params = $viewInstance->request->params;
             $requestControllerName = $params['controller'] ?? null;
             $requestActionName = $params['action'] ?? null;
 
@@ -121,9 +121,10 @@ if ($isPluginEnabled) {
                 return;
             }
 
-            $whitelistConfig = (string)Configure::read(
+            $rawWhitelist = Configure::read(
                 MsgdPluginConfigEnum::CONTROLLER_WHITELIST->value
             );
+            $whitelistConfig = is_scalar($rawWhitelist) ? (string)$rawWhitelist : '';
 
             if ($whitelistConfig === '') {
                 return;
@@ -160,6 +161,7 @@ if ($isPluginEnabled) {
                 $injectedAssetPayload = $msgdInjectorHelper->injectPlugin();
 
                 if (!empty($injectedAssetPayload)) {
+                    /** @phpstan-ignore property.notFound */
                     $viewInstance->output .= "\n" . $injectedAssetPayload;
                 }
             } catch (Throwable $exception) {

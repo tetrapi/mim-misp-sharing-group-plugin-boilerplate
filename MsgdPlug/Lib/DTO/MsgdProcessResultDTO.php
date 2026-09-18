@@ -40,11 +40,17 @@ readonly final class MsgdProcessResultDTO
      */
     public static function fromArray(array $data): self
     {
+        $rawGroupId = $data['sharing_group_id'] ?? 0;
+        $sharingGroupId = is_numeric($rawGroupId) ? (int)$rawGroupId : 0;
+
+        $rawGroupName = $data['sharing_group_name'] ?? '';
+        $sharingGroupName = is_scalar($rawGroupName) ? (string)$rawGroupName : '';
+
         return new self(
             isNew: (bool)($data['new'] ?? false),
             hasBlueprint: (bool)($data['has_blueprint'] ?? false),
-            sharingGroupId: (int)($data['sharing_group_id'] ?? 0),
-            sharingGroupName: MsgdSanitizerUtility::sanitizeString((string)($data['sharing_group_name'] ?? ''))
+            sharingGroupId: $sharingGroupId,
+            sharingGroupName: MsgdSanitizerUtility::sanitizeString($sharingGroupName)
         );
     }
 }

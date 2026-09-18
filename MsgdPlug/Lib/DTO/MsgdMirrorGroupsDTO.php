@@ -30,8 +30,8 @@ readonly final class MsgdMirrorGroupsDTO
     /**
      * Creates a DTO from resolved Sharing Group identifiers.
      *
-     * @param array<int, string> $resultUuids
-     * @param array<int, int> $resultIds
+     * @param list<string> $resultUuids
+     * @param list<int> $resultIds
      *
      * @return self
      */

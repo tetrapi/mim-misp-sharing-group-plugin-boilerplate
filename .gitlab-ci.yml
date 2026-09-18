@@ -66,6 +66,13 @@ linting-psr12:
   script:
     - phpcs -s -p --colors --extensions=php --standard=.phpcs.xml MsgdPlug/
 
+phpstan:
+  stage: test
+  image: ghcr.io/phpstan/phpstan:latest
+  needs: []
+  script:
+    - phpstan analyse -c phpstan.neon
+
 eslint-js:
   stage: test
   image: node:latest
@@ -107,8 +114,8 @@ iac-config-scan:
     entrypoint: [""]
   needs: []
   script:
-    - trivy config --exit-code 0 --severity HIGH,CRITICAL,MEDIUM --format json -o trivy-iac-report.json .
-    - trivy config --exit-code 0 --severity HIGH,CRITICAL,MEDIUM .
+    - trivy config --file-patterns "docker-compose:docker-compose-dev.yml" --exit-code 0 --severity HIGH,CRITICAL,MEDIUM --format json -o trivy-iac-report.json .
+    - trivy config --file-patterns "docker-compose:docker-compose-dev.yml" --exit-code 0 --severity HIGH,CRITICAL,MEDIUM .
   artifacts:
     when: always
     paths:

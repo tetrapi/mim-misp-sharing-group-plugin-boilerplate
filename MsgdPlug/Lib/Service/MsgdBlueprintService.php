@@ -56,11 +56,13 @@ class MsgdBlueprintService
     /**
      * Returns the active model datasource.
      *
-     * @return DataSource|null
+     * @return DataSource
      */
-    public function getDataSource(): ?DataSource
+    public function getDataSource(): DataSource
     {
-        return $this->sharingGroupBlueprint?->getDataSource();
+        $this->ensureModelAvailable();
+
+        return $this->sharingGroupBlueprint->getDataSource();
     }
 
     /**
@@ -85,7 +87,12 @@ class MsgdBlueprintService
                 'callbacks' => false,
             ]);
 
-            return empty($blueprint) ? null : MsgdBlueprintDTO::fromArray($blueprint);
+            if (!is_array($blueprint) || empty($blueprint)) {
+                return null;
+            }
+
+            /** @var array<string, mixed> $blueprint */
+            return MsgdBlueprintDTO::fromArray($blueprint);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -126,7 +133,12 @@ class MsgdBlueprintService
                 'callbacks' => false,
             ]);
 
-            return empty($blueprint) ? null : MsgdBlueprintDTO::fromArray($blueprint);
+            if (!is_array($blueprint) || empty($blueprint)) {
+                return null;
+            }
+
+            /** @var array<string, mixed> $blueprint */
+            return MsgdBlueprintDTO::fromArray($blueprint);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -216,7 +228,16 @@ class MsgdBlueprintService
         try {
             $blueprints = $this->sharingGroupBlueprint->find('all', $queryConditions);
 
+            if (!is_array($blueprints)) {
+                return null;
+            }
+
             foreach ($blueprints as $blueprintData) {
+                if (!is_array($blueprintData)) {
+                    continue;
+                }
+
+                /** @var array<string, mixed> $blueprintData */
                 $blueprint = MsgdBlueprintDTO::fromArray($blueprintData);
                 $extractedIdentifiers = $blueprint->rules->allSharingGroupIdentifiers;
 
@@ -280,9 +301,18 @@ class MsgdBlueprintService
                 'callbacks' => false,
             ]);
 
+            if (!is_array($blueprints)) {
+                return [];
+            }
+
             $ids = [];
 
             foreach ($blueprints as $blueprint) {
+                if (!is_array($blueprint)) {
+                    continue;
+                }
+
+                /** @var array<string, mixed> $blueprint */
                 $sharingGroupId = MsgdBlueprintDTO::fromArray($blueprint)->sharingGroupId;
 
                 if ($sharingGroupId > 0) {
@@ -437,7 +467,8 @@ class MsgdBlueprintService
             $this->sharingGroupBlueprint->create(false);
 
             if ($this->sharingGroupBlueprint->save($newBlueprint->toModelArray())) {
-                return (int)$this->sharingGroupBlueprint->id;
+                $rawId = $this->sharingGroupBlueprint->id;
+                return is_numeric($rawId) ? (int)$rawId : 0;
             }
 
             $validationErrors = $this->sharingGroupBlueprint->validationErrors ?? [];
@@ -536,6 +567,7 @@ class MsgdBlueprintService
      * Helper method to ensure the model dependency is present.
      *
      * @throws RuntimeException
+     * @phpstan-assert SharingGroupBlueprint $this->sharingGroupBlueprint
      */
     private function ensureModelAvailable(): void
     {

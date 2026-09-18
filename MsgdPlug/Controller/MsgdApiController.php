@@ -57,6 +57,9 @@ class MsgdApiController extends MsgdPlugAppController
 
         try {
             $user = $this->getCurrentUser();
+            if ($user === null) {
+                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
             $allowed = $this->msgdService->hasSharingGroupAccess($user, false);
 
             return $this->buildJsonResponse([
@@ -104,6 +107,9 @@ class MsgdApiController extends MsgdPlugAppController
 
         try {
             $user = $this->getCurrentUser();
+            if ($user === null) {
+                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
             $requestData = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery($this->request->query);
             $groups = $this->msgdService->getSharingGroupsByGeneratedBlueprintGroup($user, $requestData->group);
 
@@ -152,6 +158,9 @@ class MsgdApiController extends MsgdPlugAppController
 
         try {
             $user = $this->getCurrentUser();
+            if ($user === null) {
+                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
             $requestData = MsgdGetSharingGroupsDTO::fromRequestQuery($this->request->query);
             $groups = $this->msgdService->getAvailableSharingGroups($user, $requestData->all);
 
@@ -199,6 +208,9 @@ class MsgdApiController extends MsgdPlugAppController
 
         try {
             $user = $this->getCurrentUser();
+            if ($user === null) {
+                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
             $requestData = MsgdCheckBlueprintDTO::fromRequestData(
                 $this->request->data,
                 $this->msgdService->isUsingIds()
@@ -258,6 +270,9 @@ class MsgdApiController extends MsgdPlugAppController
 
         try {
             $user = $this->getCurrentUser();
+            if ($user === null) {
+                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+            }
             $requestData = MsgdProcessGroupsDTO::fromRequestData(
                 $this->request->data,
                 $this->msgdService->isUsingIds()

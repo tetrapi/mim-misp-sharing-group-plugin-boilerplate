@@ -145,6 +145,9 @@ final class MsgdUserDTOTest extends TestCase
             ],
         ]);
 
+        assert(is_string($dto->orgName));
+        assert(is_string($dto->orgUuid));
+
         $this->assertStringNotContainsString('<script>', $dto->email);
         $this->assertStringNotContainsString('<script>', $dto->orgName);
         $this->assertStringNotContainsString('<script>', $dto->orgUuid);

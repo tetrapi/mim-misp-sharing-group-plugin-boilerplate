@@ -57,12 +57,15 @@ class MsgdSharingGroupService
     /**
      * Returns the active model datasource.
      *
-     * @return DataSource|null
+     * @return DataSource
      */
-    public function getDataSource(): ?DataSource
+    public function getDataSource(): DataSource
     {
-        return $this->sharingGroup?->getDataSource();
+        $this->ensureModelAvailable();
+
+        return $this->sharingGroup->getDataSource();
     }
+
 
     /**
      * Finds a sharing group by ID.
@@ -89,9 +92,12 @@ class MsgdSharingGroupService
                 'recursive' => -1,
             ]);
 
-            return !empty($sharingGroup)
-                ? MsgdSharingGroupDTO::fromArray($sharingGroup)
-                : null;
+            if (!is_array($sharingGroup) || empty($sharingGroup)) {
+                return null;
+            }
+
+            /** @var array<string, mixed> $sharingGroup */
+            return MsgdSharingGroupDTO::fromArray($sharingGroup);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -139,9 +145,12 @@ class MsgdSharingGroupService
                 'recursive' => -1,
             ]);
 
-            return !empty($sharingGroup)
-                ? MsgdSharingGroupDTO::fromArray($sharingGroup)
-                : null;
+            if (!is_array($sharingGroup) || empty($sharingGroup)) {
+                return null;
+            }
+
+            /** @var array<string, mixed> $sharingGroup */
+            return MsgdSharingGroupDTO::fromArray($sharingGroup);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -184,8 +193,8 @@ class MsgdSharingGroupService
         foreach ($identifiers as $identifier) {
             if (is_numeric($identifier)) {
                 $idsToSearch[] = (int)$identifier;
-            } elseif (is_string($identifier) && MsgdSanitizerUtility::isValidUuid($identifier)) {
-                $uuidsToSearch[] = $identifier;
+            } elseif (MsgdSanitizerUtility::isValidUuid((string)$identifier)) {
+                $uuidsToSearch[] = (string)$identifier;
             }
         }
 
@@ -223,15 +232,30 @@ class MsgdSharingGroupService
                 'recursive' => -1,
             ]);
 
+            if (!is_array($retrievedGroups)) {
+                return null;
+            }
+
             $resultIds = [];
             $resultUuids = [];
 
             foreach ($retrievedGroups as $group) {
-                $resultIds[] = (int)$group['SharingGroup']['id'];
-                $resultUuids[] = (string)$group['SharingGroup']['uuid'];
+                if (!is_array($group) || !isset($group['SharingGroup']) || !is_array($group['SharingGroup'])) {
+                    continue;
+                }
+
+                $rawId = $group['SharingGroup']['id'] ?? 0;
+                if (is_numeric($rawId)) {
+                    $resultIds[] = (int)$rawId;
+                }
+
+                $rawUuid = $group['SharingGroup']['uuid'] ?? '';
+                if (is_scalar($rawUuid) && (string)$rawUuid !== '') {
+                    $resultUuids[] = (string)$rawUuid;
+                }
             }
 
-            return MsgdMirrorGroupsDTO::fromArray($resultIds, $resultUuids);
+            return MsgdMirrorGroupsDTO::fromArray($resultUuids, $resultIds);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException($exception, '[MsgdSharingGroupService] getMirrorGroups');
 
@@ -284,13 +308,18 @@ class MsgdSharingGroupService
                 'recursive' => -1,
             ]);
 
-            if (empty($retrievedGroups)) {
+            if (!is_array($retrievedGroups) || empty($retrievedGroups)) {
                 return [];
             }
 
             $mappedSharingGroupsList = [];
 
             foreach ($retrievedGroups as $group) {
+                if (!is_array($group)) {
+                    continue;
+                }
+
+                /** @var array<string, mixed> $group */
                 $mappedSharingGroupsList[] = MsgdSharingGroupDTO::fromArray($group);
             }
 
@@ -308,6 +337,8 @@ class MsgdSharingGroupService
 
     /**
      * Helper method to ensure the model dependency is present.
+     *
+     * @phpstan-assert SharingGroup $this->sharingGroup
      *
      * @throws RuntimeException
      */

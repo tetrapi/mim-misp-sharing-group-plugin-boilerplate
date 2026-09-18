@@ -36,12 +36,22 @@ readonly final class MsgdSharingGroupDTO
      */
     public static function fromArray(array $data): self
     {
-        $groupData = $data['SharingGroup'] ?? $data;
+        $rawGroupData = $data['SharingGroup'] ?? $data;
+        $groupData = is_array($rawGroupData) ? $rawGroupData : $data;
+
+        $rawId = $groupData['id'] ?? 0;
+        $id = is_numeric($rawId) ? (int)$rawId : 0;
+
+        $rawUuid = $groupData['uuid'] ?? '';
+        $uuid = is_scalar($rawUuid) ? (string)$rawUuid : '';
+
+        $rawName = $groupData['name'] ?? '';
+        $name = is_scalar($rawName) ? (string)$rawName : '';
 
         return new self(
-            id: (int)($groupData['id'] ?? 0),
-            uuid: MsgdSanitizerUtility::sanitizeString((string)($groupData['uuid'] ?? '')),
-            name: MsgdSanitizerUtility::sanitizeString((string)($groupData['name'] ?? ''))
+            id: $id,
+            uuid: MsgdSanitizerUtility::sanitizeString($uuid),
+            name: MsgdSanitizerUtility::sanitizeString($name)
         );
     }
 }
