@@ -108,11 +108,14 @@ test-misp-login-200:
   script:
     - echo "--> Executando Deploy e Instalador via dev.sh..."
     - printf "1\n" | ./dev.sh
-
     - echo "--> Validando status HTTP do MISP apos instalacao..."
-    - HTTP_STATUS=$(docker compose -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login || echo "000")
-    - echo "Status retornado: HTTP $HTTP_STATUS"
-    - if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "302" ]; then exit 1; fi
+    - |
+      HTTP_STATUS=$(docker compose -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login || echo "000")
+      echo "Status retornado: HTTP $HTTP_STATUS"
+      if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "302" ]; then
+        echo "ERRO: MISP respondeu com HTTP $HTTP_STATUS"
+        exit 1
+      fi
   after_script:
     - docker compose -f docker-compose-dev.yml down -v || true
 
