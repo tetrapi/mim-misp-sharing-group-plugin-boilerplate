@@ -115,11 +115,9 @@ test-misp-login-200:
     - dos2unix msgd_installer.sh 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
-    - docker compose --env-file .env -f docker-compose-dev.yml up -d redis db mail misp-modules
+    - docker compose --env-file .env -f docker-compose-dev.yml down -v --remove-orphans || true
 
-    - sleep 15
-
-    - docker compose --env-file .env -f docker-compose-dev.yml up -d --no-deps misp-core
+    - docker compose --env-file .env -f docker-compose-dev.yml up -d --force-recreate
 
     - |
       echo "--> Waiting for initial MISP Core startup (up to 15 minutes)..."
@@ -139,35 +137,6 @@ test-misp-login-200:
       
       if [ "$BASE_READY" -ne 1 ]; then
         echo "ERROR: Timed out waiting for Base MISP initialization."
-        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
-        exit 1
-      fi
-
-    - echo "--> Copying files to misp-core container..."
-    - MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core)
-    - docker exec -u root $MISP_CONTAINER mkdir -p /tmp/msgd_setup
-    - docker cp . $MISP_CONTAINER:/tmp/msgd_setup/
-
-    - echo "--> Executing plugin installer..."
-    - docker exec -u root $MISP_CONTAINER bash -c "cd /tmp/msgd_setup && dos2unix msgd_installer.sh && chmod +x msgd_installer.sh && ./msgd_installer.sh --auto"
-
-    - |
-      echo "--> Validating MISP access after plugin installation..."
-      PLUGIN_READY=0
-      for i in $(seq 1 12); do
-        HTTP_STATUS=$(docker exec $MISP_CONTAINER bash -c 'curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login' 2>/dev/null | tr -d '\r\n\t ' || echo "000")
-        echo "Attempt $i/12 (MISP + Plugin): HTTP '$HTTP_STATUS'"
-      
-        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
-          echo "SUCCESS: MISP with plugin active responded with HTTP $HTTP_STATUS!"
-          PLUGIN_READY=1
-          break
-        fi
-        sleep 5
-      done
-      
-      if [ "$PLUGIN_READY" -ne 1 ]; then
-        echo "ERROR: MISP stopped responding after plugin installation."
         docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
         exit 1
       fi
