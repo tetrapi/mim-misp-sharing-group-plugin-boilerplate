@@ -80,7 +80,7 @@ services:
       interval: 2s
       timeout: 1s
       retries: 3
-      start_period: 30s
+      start_period: 300s
       start_interval: 30s
     ports:
       - '80:80'

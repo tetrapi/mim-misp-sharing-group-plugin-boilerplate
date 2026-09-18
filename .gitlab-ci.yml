@@ -103,6 +103,8 @@ test-misp-login-200:
   needs: []
   before_script:
     - apk add --no-progress --no-cache bash dos2unix curl
+    - if [ ! -f .env ]; then cp example.env .env || touch .env; fi
+    - echo "BASE_URL=https://127.0.0.1" >> .env
     - dos2unix dev.sh msgd_installer.sh 2>/dev/null || true
     - chmod +x dev.sh msgd_installer.sh
   script:
@@ -117,7 +119,7 @@ test-misp-login-200:
         exit 1
       fi
   after_script:
-    - docker compose -f docker-compose-dev.yml down -v || true
+    - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
 
 # ==============================================================================
 # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
