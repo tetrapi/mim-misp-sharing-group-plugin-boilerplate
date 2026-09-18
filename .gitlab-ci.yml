@@ -103,6 +103,7 @@ test-misp-installer:
   needs: []
   before_script:
     - apk add --no-progress --no-cache bash dos2unix
+    - cp example.env .env 2>/dev/null || touch .env
     - |
       cat << 'EOF' >> .env
       CORE_TAG=latest
@@ -115,7 +116,7 @@ test-misp-installer:
       DISABLE_IPV6=false
       DEBUG=0
       EOF
-    - dos2unix msgd_installer.sh 2>/dev/null || true
+    - dos2unix msgd_installer.sh .env 2>/dev/null || true
     - chmod +x msgd_installer.sh
   script:
     - echo "--> Starting containers..."
