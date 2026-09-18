@@ -150,7 +150,6 @@ test-misp-installer:
             BASE_READY=1
             break
           fi
-          # 'starting' and 'unhealthy' will continue polling until timeout
         fi
         sleep 5
       done
@@ -169,7 +168,7 @@ test-misp-installer:
 
   after_script:
     - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
-    - 
+
 # ==============================================================================
 # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
 # ==============================================================================
