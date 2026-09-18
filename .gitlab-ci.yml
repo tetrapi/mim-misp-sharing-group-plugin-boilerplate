@@ -102,49 +102,19 @@ test-misp-login-200:
     DOCKER_TLS_CERTDIR: ""
   needs: []
   before_script:
-    - apk add --no-progress --no-cache curl bash dos2unix
-    - if [ -f example.env ]; then cp example.env .env; else touch .env; fi
-    - |
-      cat << 'EOF' >> .env
-      MODULES_COMMIT=main
-      BASE_URL=https://127.0.0.1
-      DISABLE_SSL_REDIRECT=false
-      DISABLE_CA_REFRESH=false
-      DISABLE_IPV6=false
-      EOF
-    - dos2unix msgd_installer.sh 2>/dev/null || true
-    - chmod +x msgd_installer.sh
+    - apk add --no-progress --no-cache bash dos2unix curl
+    - dos2unix dev.sh msgd_installer.sh 2>/dev/null || true
+    - chmod +x dev.sh msgd_installer.sh
   script:
-    - docker compose --env-file .env -f docker-compose-dev.yml down -v --remove-orphans || true
+    - echo "--> Executando Deploy e Instalador via dev.sh..."
+    - printf "1\n" | ./dev.sh
 
-    - docker compose --env-file .env -f docker-compose-dev.yml up -d --force-recreate
-
-    - |
-      echo "--> Waiting for initial MISP Core startup (up to 15 minutes)..."
-      BASE_READY=0
-      for i in $(seq 1 180); do
-        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash -c 'curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login' 2>/dev/null | tr -d '\r\n\t ' || echo "000")
-      
-        echo "Attempt $i/180 (Base MISP): HTTP '$HTTP_STATUS'"
-      
-        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
-          echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
-          BASE_READY=1
-          break
-        fi
-        sleep 5
-      done
-      
-      if [ "$BASE_READY" -ne 1 ]; then
-        echo "ERROR: Timed out waiting for Base MISP initialization."
-        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
-        exit 1
-      fi
-
+    - echo "--> Validando status HTTP do MISP apos instalacao..."
+    - HTTP_STATUS=$(docker compose -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login || echo "000")
+    - echo "Status retornado: HTTP $HTTP_STATUS"
+    - if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "302" ]; then exit 1; fi
   after_script:
-    - docker compose --env-file .env -f docker-compose-dev.yml logs misp-modules || true
-    - docker compose --env-file .env -f docker-compose-dev.yml logs misp-core || true
-    - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
+    - docker compose -f docker-compose-dev.yml down -v || true
 
 # ==============================================================================
 # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
