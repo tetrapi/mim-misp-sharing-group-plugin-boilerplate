@@ -132,7 +132,7 @@ test-misp-installer:
     - LOGS_PID=$!
 
     - |
-      # Silent wait loop matching .dev wait_for_healthy logic
+      # Wait loop that allows transient 'unhealthy' states during component updates
       BASE_READY=0
       for i in $(seq 1 240); do
         MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core 2>/dev/null)
@@ -145,21 +145,18 @@ test-misp-installer:
             BASE_READY=1
             break
           elif [ "$STATUS" = "missing" ]; then
-            echo "--> [WARNING] No health check defined in compose. Applying 15s startup buffer..."
+            echo "--> [WARNING] No health check defined in compose. Applying 15s buffer..."
             sleep 15
             BASE_READY=1
             break
-          elif [ "$STATUS" = "unhealthy" ]; then
-            echo "--> [ERROR] Container reported unhealthy status."
-            kill $LOGS_PID 2>/dev/null || true
-            exit 1
           fi
+          # 'starting' and 'unhealthy' will continue polling until timeout
         fi
         sleep 5
       done
 
       if [ "$BASE_READY" -ne 1 ]; then
-        echo "ERROR: Timeout reached waiting for misp-core."
+        echo "ERROR: Timeout reached waiting for misp-core to stabilize."
         kill $LOGS_PID 2>/dev/null || true
         exit 1
       fi
@@ -172,7 +169,7 @@ test-misp-installer:
 
   after_script:
     - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
-
+    - 
 # ==============================================================================
 # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
 # ==============================================================================
