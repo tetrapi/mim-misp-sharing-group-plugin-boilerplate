@@ -103,21 +103,75 @@ test-misp-login-200:
   needs: []
   before_script:
     - apk add --no-progress --no-cache bash dos2unix curl
-    - if [ ! -f .env ]; then cp example.env .env || touch .env; fi
-    - echo "BASE_URL=https://127.0.0.1" >> .env
-    - dos2unix dev.sh msgd_installer.sh 2>/dev/null || true
-    - chmod +x dev.sh msgd_installer.sh
-  script:
-    - echo "--> Executando Deploy e Instalador via dev.sh..."
-    - printf "1\n" | ./dev.sh
-    - echo "--> Validando status HTTP do MISP apos instalacao..."
+    - if [ ! -f .env ]; then cp example.env .env 2>/dev/null || touch .env; fi
     - |
-      HTTP_STATUS=$(docker compose -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login || echo "000")
-      echo "Status retornado: HTTP $HTTP_STATUS"
-      if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "302" ]; then
-        echo "ERRO: MISP respondeu com HTTP $HTTP_STATUS"
+      cat << 'EOF' >> .env
+      MODULES_COMMIT=main
+      BASE_URL=https://127.0.0.1
+      DISABLE_SSL_REDIRECT=false
+      DISABLE_CA_REFRESH=false
+      DISABLE_IPV6=false
+      DEBUG=0
+      EOF
+    - dos2unix msgd_installer.sh 2>/dev/null || true
+    - chmod +x msgd_installer.sh
+  script:
+    - echo "--> Subindo containers com docker compose..."
+    - docker compose --env-file .env -f docker-compose-dev.yml up -d
+
+    - |
+      echo "--> Aguardando inicialização do MISP Core (Janela de até 20 minutos)..."
+      BASE_READY=0
+      # 240 tentativas * 5s = 1200s (20 minutos)
+      for i in $(seq 1 240); do
+        MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core 2>/dev/null)
+        if [ -n "$MISP_CONTAINER" ]; then
+          HTTP_STATUS=$(docker exec $MISP_CONTAINER curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login 2>/dev/null | tr -d '\r\n\t ' || echo "000")
+        else
+          HTTP_STATUS="000"
+        fi
+
+        echo "Tentativa $i/240: HTTP '$HTTP_STATUS'"
+
+        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
+          echo "SUCESSO: MISP Base está ativo e respondendo!"
+          BASE_READY=1
+          break
+        fi
+        sleep 5
+      done
+
+      if [ "$BASE_READY" -ne 1 ]; then
+        echo "ERRO: Timeout de 20 minutos atingido aguardando o MISP Core."
+        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
         exit 1
       fi
+
+    - echo "--> Executando o instalador do plugin diretamente no container..."
+    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+
+    - |
+      echo "--> Validando acesso ao MISP após a instalação do plugin..."
+      PLUGIN_READY=0
+      for i in $(seq 1 12); do
+        MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core 2>/dev/null)
+        HTTP_STATUS=$(docker exec $MISP_CONTAINER curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login 2>/dev/null | tr -d '\r\n\t ' || echo "000")
+        echo "Tentativa $i/12 (MISP + Plugin): HTTP '$HTTP_STATUS'"
+
+        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
+          echo "SUCESSO: MISP com o plugin instalado respondeu com HTTP $HTTP_STATUS!"
+          PLUGIN_READY=1
+          break
+        fi
+        sleep 5
+      done
+
+      if [ "$PLUGIN_READY" -ne 1 ]; then
+        echo "ERRO: O MISP deixou de responder após a execução do plugin."
+        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
+        exit 1
+      fi
+
   after_script:
     - docker compose --env-file .env -f docker-compose-dev.yml down -v || true
 

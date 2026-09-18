@@ -74,13 +74,13 @@ services:
       db:
         condition: service_healthy
       misp-modules:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: curl -ks ${BASE_URL:-https://localhost}/users/heartbeat > /dev/null || exit 1
       interval: 2s
       timeout: 1s
       retries: 3
-      start_period: 300s
+      start_period: 30s
       start_interval: 30s
     ports:
       - '80:80'
@@ -289,8 +289,8 @@ services:
       interval: 2s
       timeout: 1s
       retries: 3
-      start_period: 5s
-      start_interval: 5s
+      start_period: 30s
+      start_interval: 30s
     volumes:
       # custom MISP modules are loaded at startup time
       - "./custom/action_mod/:/custom/action_mod/:Z"
