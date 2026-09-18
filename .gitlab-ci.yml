@@ -107,7 +107,7 @@ test-misp-login-200:
     - |
       cat << 'EOF' >> .env
       MODULES_COMMIT=main
-      BASE_URL=https://localhost
+      BASE_URL=https://127.0.0.1
       DISABLE_SSL_REDIRECT=false
       DISABLE_CA_REFRESH=false
       DISABLE_IPV6=false
@@ -122,7 +122,7 @@ test-misp-login-200:
       echo "--> Waiting for initial MISP Core startup (up to 15 minutes)..."
       BASE_READY=0
       for i in $(seq 1 180); do
-        # Executa o curl de forma limpa dentro de um sub-bash no container e remove quaisquer espaços ou quebras de linha
+        # Utiliza sempre 127.0.0.1 para evitar problemas de resolução de localhost(IPv6) no Alpine
         HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash -c 'curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login' 2>/dev/null | tr -d '\r\n\t ' || echo "000")
       
         echo "Attempt $i/180 (Base MISP): HTTP '$HTTP_STATUS'"
@@ -137,22 +137,28 @@ test-misp-login-200:
       
       if [ "$BASE_READY" -ne 1 ]; then
         echo "ERROR: Timed out waiting for Base MISP initialization."
-        # Imprime as últimas 50 linhas do log para ajudar a perceber onde bloqueou caso falhe de novo
         docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
         exit 1
       fi
 
+    - echo "--> Copying files to misp-core container..."
+    - MISP_CONTAINER=$(docker compose --env-file .env -f docker-compose-dev.yml ps -q misp-core)
+    - docker exec -u root $MISP_CONTAINER mkdir -p /tmp/msgd_setup
+    - docker cp . $MISP_CONTAINER:/tmp/msgd_setup/
+
     - echo "--> Executing plugin installer..."
-    - docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+    - docker exec -u root $MISP_CONTAINER bash -c "cd /tmp/msgd_setup && dos2unix msgd_installer.sh && chmod +x msgd_installer.sh && ./msgd_installer.sh --auto"
 
     - |
       echo "--> Validating MISP access after plugin installation..."
       PLUGIN_READY=0
       for i in $(seq 1 12); do
-        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://localhost/users/login || echo "000")
-        echo "Attempt $i/12 (MISP + Plugin): HTTP $HTTP_STATUS"
+        # Padronizado com o mesmo formato seguro do primeiro loop
+        HTTP_STATUS=$(docker exec $MISP_CONTAINER bash -c 'curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login' 2>/dev/null | tr -d '\r\n\t ' || echo "000")
+        echo "Attempt $i/12 (MISP + Plugin): HTTP '$HTTP_STATUS'"
 
-        if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+        # Corrigido: Usando "=" no lugar de "-eq" para evitar erro de syntax no bash (integer expression expected)
+        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
           echo "SUCCESS: MISP with plugin active responded with HTTP $HTTP_STATUS!"
           PLUGIN_READY=1
           break
@@ -162,6 +168,7 @@ test-misp-login-200:
 
       if [ "$PLUGIN_READY" -ne 1 ]; then
         echo "ERROR: MISP stopped responding after plugin installation."
+        docker compose --env-file .env -f docker-compose-dev.yml logs misp-core | tail -n 50
         exit 1
       fi
 
