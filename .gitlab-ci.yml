@@ -119,20 +119,20 @@ test-misp-login-200:
     - docker compose --env-file .env -f docker-compose-dev.yml up -d misp-core
 
     - |
-      echo "--> Waiting for initial MISP Core startup (up to 10 minutes)..."
+      echo "--> Waiting for initial MISP Core startup (up to 7.5 minutes)..."
       BASE_READY=0
-      for i in $(seq 1 200); do
-        # Test directly inside misp-core targeting 127.0.0.1
-        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login 2>/dev/null || echo "000")
+      for i in $(seq 1 90); do
+        # tr -d '\r\n' remove caracteres ocultos retornados pelo docker exec
+        HTTP_STATUS=$(docker compose --env-file .env -f docker-compose-dev.yml exec -T misp-core curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1/users/login | tr -d '\r\n' || echo "000")
       
-        echo "Attempt $i/200 (Base MISP): HTTP $HTTP_STATUS"
+        echo "Attempt $i/90 (Base MISP): HTTP '$HTTP_STATUS'"
       
-        if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+        if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
           echo "SUCCESS: Base MISP is UP and responding with HTTP $HTTP_STATUS!"
           BASE_READY=1
           break
         fi
-        sleep 3
+        sleep 5
       done
       
       if [ "$BASE_READY" -ne 1 ]; then
