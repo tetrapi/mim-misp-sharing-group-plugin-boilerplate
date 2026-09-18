@@ -104,7 +104,10 @@ test-misp-installer:
   before_script:
     - apk add --no-progress --no-cache bash dos2unix
     - |
-      cat << 'EOF' > .env
+      cat << 'EOF' >> .env
+      CORE_TAG=latest
+      PHP_VER=8.2
+      MODULES_TAG=latest
       MODULES_COMMIT=main
       BASE_URL=https://127.0.0.1
       DISABLE_SSL_REDIRECT=false
