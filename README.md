@@ -4,9 +4,8 @@
 
 | Platform | Pipeline Status |
 | :--- | :--- |
-| **GitHub Actions** | [![GitHub CI](https://img.shields.io/github/actions/workflow/status/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/ci.yml?branch=main&label=GitHub%20CI&logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml) |
-| **GitLab CI** | [![GitLab CI](https://git.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/badges/main/pipeline.svg)](https://git.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
-
+| **GitHub Actions** | [![GitHub CI](https://img.shields.io/badge/GitHub_CI-Workflow-blue?logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml) |
+| **GitLab CI** | [![GitLab CI](https://img.shields.io/badge/GitLab_CI-Pipelines-orange?logo=gitlab&style=flat-square)](https://it.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
 [![License](https://img.shields.io/badge/License-AGPL%203.0-blue?style=flat-square)](LICENSE)
 
 [![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.2-777BB4?logo=php&logoColor=white&style=flat-square)](https://www.php.net)
