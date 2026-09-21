@@ -138,10 +138,14 @@ phpunit:
     - name: docker:dind
       alias: docker
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+    # Utilizando o padrão atual seguro do GitLab CI (TLS na porta 2376)
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
   needs: []
   script:
+    - echo "--> Aguardando o daemon do Docker iniciar..."
+    - for i in $(seq 1 15); do docker info >/dev/null 2>&1 && break || sleep 2; done
+
     - echo "--> Preparing environment variables file..."
     - if [ ! -f .env ] && [ -f example.env ]; then cp example.env .env; fi
 
@@ -168,7 +172,7 @@ phpunit:
     - docker compose -f docker-compose-dev.yml exec -T misp-core /var/www/MISP/app/Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
 
 # ==============================================================================
-# STAGE 3: sbom - EU CRA Software Inventory Generation
+# STAGE 4: sbom - EU CRA Software Inventory Generation
 # ==============================================================================
 
 generate-sbom:
