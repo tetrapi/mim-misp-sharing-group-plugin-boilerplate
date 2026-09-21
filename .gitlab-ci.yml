@@ -148,8 +148,8 @@ phpunit:
 
     - git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git /var/www/MISP
 
-    - mkdir -p /var/www/MISP/app/Plugin/MsgdPlug
-    - cp -a . /var/www/MISP/app/Plugin/MsgdPlug/
+    - mkdir -p /var/www/MISP/app/Plugin
+    - cp -a MsgdPlug /var/www/MISP/app/Plugin/
 
     - cd /var/www/MISP/app
     - composer install --ignore-platform-reqs --no-interaction
@@ -165,7 +165,7 @@ phpunit:
       }
       EOF
   script:
-    - ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*.php")
+    - ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*Test.php")
 
 # ==============================================================================
 # STAGE 4: sbom - EU CRA Software Inventory Generation
