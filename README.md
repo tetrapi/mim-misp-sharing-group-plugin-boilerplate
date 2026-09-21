@@ -5,7 +5,7 @@
 | Platform | Pipeline Status |
 | :--- | :--- |
 | **GitHub Actions** | [![GitHub CI](https://img.shields.io/badge/GitHub_CI-Workflow-blue?logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml) |
-| **GitLab CI** | [![GitLab CI](https://img.shields.io/badge/GitLab_CI-Pipelines-orange?logo=gitlab&style=flat-square)](https://it.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
+| **GitLab CI** | [![GitLab CI](https://img.shields.io/badge/GitLab_CI-Pipelines-orange?logo=gitlab&style=flat-square)](https://git.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
 
 [![License](https://img.shields.io/badge/License-AGPL%203.0-blue?style=flat-square)](LICENSE)
 
