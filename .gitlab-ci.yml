@@ -74,9 +74,11 @@ phpstan:
   needs: []
   before_script:
     - mkdir -p .misp-stubs
-    - apk add --no-cache curl unzip
-    - curl -sL https://github.com/MISP/MISP/archive/refs/heads/main.zip -o misp.zip
-    - unzip -q misp.zip
+    - apk add --no-cache git composer
+    - git clone -b 2.5 --depth 1 https://github.com/MISP/MISP.git MISP-main
+    - cd MISP-main/app
+    - composer install --no-dev --ignore-platform-reqs --no-interaction
+    - cd ../../
     - cp -r MISP-main/app/Model MISP-main/app/Lib MISP-main/app/Vendor .misp-stubs/
   script:
     - phpstan analyse -c phpstan.neon
