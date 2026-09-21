@@ -72,6 +72,12 @@ phpstan:
     name: ghcr.io/phpstan/phpstan:latest
     entrypoint: [""]
   needs: []
+  before_script:
+    - mkdir -p .misp-stubs
+    - apk add --no-cache curl unzip
+    - curl -sL https://github.com/MISP/MISP/archive/refs/heads/main.zip -o misp.zip
+    - unzip -q misp.zip
+    - cp -r MISP-main/app/Model MISP-main/app/Lib MISP-main/app/Vendor .misp-stubs/
   script:
     - phpstan analyse -c phpstan.neon
 
