@@ -68,7 +68,9 @@ linting-psr12:
 
 phpstan:
   stage: test
-  image: ghcr.io/phpstan/phpstan:latest
+  image:
+    name: ghcr.io/phpstan/phpstan:latest
+    entrypoint: [""]
   needs: []
   script:
     - phpstan analyse -c phpstan.neon
