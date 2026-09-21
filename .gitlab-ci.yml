@@ -131,6 +131,42 @@ iac-config-scan:
     paths:
       - trivy-iac-report.json
 
+phpunit:
+  stage: integration
+  image: docker:latest
+  services:
+    - name: docker:dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: []
+  script:
+    - echo "--> Preparing environment variables file..."
+    - if [ ! -f .env ] && [ -f example.env ]; then cp example.env .env; fi
+
+    - echo "--> Starting development containers..."
+    - docker compose -f docker-compose-dev.yml up -d
+    - |
+      echo "--> Waiting for misp-core container to be healthy..."
+      for i in $(seq 1 60); do
+        STATUS=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" misp-core 2>/dev/null || echo "missing")
+        if [ "$STATUS" == "healthy" ]; then
+          echo "--> misp-core container is healthy!"
+          break
+        elif [ "$STATUS" == "unhealthy" ]; then
+          echo "--> [ERROR] misp-core container reported unhealthy status."
+          exit 1
+        fi
+        sleep 5
+      done
+
+    - echo "--> Running plugin installer..."
+    - docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
+
+    - echo "--> Executing MsgdPlug PHPUnit tests..."
+    - docker compose -f docker-compose-dev.yml exec -T misp-core /var/www/MISP/app/Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
+
 # ==============================================================================
 # STAGE 3: sbom - EU CRA Software Inventory Generation
 # ==============================================================================
