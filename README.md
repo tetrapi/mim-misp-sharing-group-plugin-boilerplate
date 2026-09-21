@@ -2,6 +2,21 @@
 
 **MsgdPlug** is an plugin for **MISP (Malware Information Sharing Platform)** designed to bypass native single Sharing Group selection limits. It injects client-side controls and backend services into standard MISP views (`Add`, `Edit`, `View`, `Index`) allowing users to select multiple Sharing Groups simultaneously via dynamically evaluated **Sharing Group Blueprints**.
 
+| Platform | Pipeline Status |
+| :--- | :--- |
+| **GitHub Actions** | [![GitHub CI](https://img.shields.io/github/actions/workflow/status/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/ci.yml?branch=main&label=GitHub%20CI&logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml) |
+| **GitLab CI** | [![GitLab CI](https://it.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/badges/main/pipeline.svg)](https://it.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
+
+[![License](https://img.shields.io/badge/License-AGPL%203.0-blue?style=flat-square)](LICENSE)
+
+[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.2-777BB4?logo=php&logoColor=white&style=flat-square)](https://www.php.net)
+
+[![PHPStan](https://img.shields.io/badge/PHPStan-Level%2010-brightgreen?logo=php&logoColor=white&style=flat-square)](phpstan.neon)
+
+[![Code Style](https://img.shields.io/badge/Code%20Style-PSR--12-yellow?logo=php&logoColor=white&style=flat-square)](.phpcs.xml)
+
+[![MISP](https://img.shields.io/badge/MISP-v2.5-red?style=flat-square)](https://github.com/MISP/MISP)
+
 [![MISP Repository](https://img.shields.io/badge/Go%20to-MISP%20Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MISP/MISP)
 
 ![Demo preview](images/demo1.gif)
