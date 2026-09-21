@@ -75,9 +75,9 @@ phpstan:
   before_script:
     - mkdir -p .misp-stubs
     - apk add --no-cache git composer
-    - git clone -b 2.5 --depth 1 https://github.com/MISP/MISP.git MISP-main
+    - git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git MISP-main
     - cd MISP-main/app
-    - composer install --ignore-platform-reqs --no-interaction
+    - composer install --no-dev --ignore-platform-reqs --no-interaction
     - cd ../../
     - cp -r MISP-main/app/Model MISP-main/app/Lib MISP-main/app/Vendor .misp-stubs/
   script:

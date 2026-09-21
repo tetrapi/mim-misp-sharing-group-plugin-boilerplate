@@ -144,9 +144,6 @@ final class MsgdPlugAppControllerTest extends TestCase
     {
         $controller = $this->createController();
 
-        /** @phpstan-ignore assign.propertyType */
-        $controller->Security = null;
-
         $controller->beforeFilter();
 
         /** @var array<string, string> $headers */
@@ -209,9 +206,6 @@ final class MsgdPlugAppControllerTest extends TestCase
     public function testGetCurrentUserReturnsNullWithoutAuth(): void
     {
         $controller = $this->createController();
-
-        /** @phpstan-ignore assign.propertyType */
-        $controller->Auth = null;
 
         $reflection = new ReflectionClass(MsgdPlugAppController::class);
         $method = $reflection->getMethod('getCurrentUser');
