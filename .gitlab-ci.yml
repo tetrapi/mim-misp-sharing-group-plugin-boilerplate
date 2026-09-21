@@ -133,7 +133,7 @@ iac-config-scan:
 
 phpunit:
   stage: integration
-  image: php:8.1-cli
+  image: php:8.2-cli
   services:
     - name: mysql:8.0
       alias: db
@@ -165,7 +165,7 @@ phpunit:
       }
       EOF
   script:
-    - /var/www/MISP/app/Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
+    - ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*Test.php")
 
 # ==============================================================================
 # STAGE 4: sbom - EU CRA Software Inventory Generation
