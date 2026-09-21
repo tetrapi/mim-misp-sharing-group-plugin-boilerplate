@@ -37,11 +37,11 @@ final class MsgdPlugAppControllerTest extends TestCase
     /**
      * Creates a controller test double.
      *
-     * @param (AuthComponent&MockObject)|null $authMock Authentication component mock.
+     * @param AuthComponent|null $authMock Authentication component test double.
      *
      * @return MsgdPlugAppController
      */
-    private function createController(AuthComponent|MockObject|null $authMock = null): MsgdPlugAppController
+    private function createController(?AuthComponent $authMock = null): MsgdPlugAppController
     {
         /** @var MsgdPlugAppController&MockObject $controller */
         $controller = $this->getMockBuilder(MsgdPlugAppController::class)
@@ -56,24 +56,31 @@ final class MsgdPlugAppControllerTest extends TestCase
     }
 
     /**
-     * Creates an authentication component mock.
+     * Creates an authentication component test double using an anonymous class.
      *
      * @param mixed $user Authentication result.
      *
-     * @return AuthComponent&MockObject
+     * @return AuthComponent
      */
-    private function createAuthMock(mixed $user = null): AuthComponent&MockObject
+    private function createAuthMock(mixed $user = null): AuthComponent
     {
-        /** @var AuthComponent&MockObject $authMock */
-        $authMock = $this->getMockBuilder('AuthComponent')
-            ->disableOriginalConstructor()
-            ->onlyMethods(['user', 'deny'])
-            ->getMock();
+        return new class ($user) extends AuthComponent {
+            private static mixed $userData = null;
 
-        $authMock->method('user')->willReturn($user);
-        $authMock->method('deny');
+            public function __construct(mixed $userData = null)
+            {
+                self::$userData = $userData;
+            }
 
-        return $authMock;
+            public static function user($key = null): mixed
+            {
+                if (is_array(self::$userData) && $key !== null) {
+                    return self::$userData[$key] ?? null;
+                }
+
+                return self::$userData;
+            }
+        };
     }
 
     /**
@@ -113,8 +120,11 @@ final class MsgdPlugAppControllerTest extends TestCase
         $controller->response = new CakeResponse();
         $controller->Auth = $this->createAuthMock($this->validUser());
 
-        /** @phpstan-ignore arguments.count */
-        $security = new SecurityComponent();
+        /** @var SecurityComponent&MockObject $security */
+        $security = $this->getMockBuilder('SecurityComponent')
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $security->csrfCheck = false;
         $security->validatePost = true;
         $controller->Security = $security;
@@ -139,6 +149,7 @@ final class MsgdPlugAppControllerTest extends TestCase
 
         $controller->beforeFilter();
 
+        /** @var array<string, string> $headers */
         $headers = $controller->response->header();
 
         $this->assertSame(
@@ -329,7 +340,9 @@ final class MsgdPlugAppControllerTest extends TestCase
     public function testAppendNextTokenAddsToken(): void
     {
         $controller = $this->createController();
-        $controller->request->params['_Token']['key'] = 'next-token';
+        $controller->request->params['_Token'] = [
+            'key' => 'next-token',
+        ];
 
         $reflection = new ReflectionClass(MsgdPlugAppController::class);
         $method = $reflection->getMethod('appendNextToken');
@@ -363,10 +376,10 @@ final class MsgdPlugAppControllerTest extends TestCase
             'status' => 'success',
         ];
 
-        $this->assertSame(
-            $payload,
-            $method->invoke($controller, $payload)
-        );
+        /** @var array<string, mixed> $result */
+        $result = $method->invoke($controller, $payload);
+
+        $this->assertSame($payload, $result);
     }
 
     /**
@@ -398,7 +411,8 @@ final class MsgdPlugAppControllerTest extends TestCase
         $this->assertSame(201, $response->statusCode());
         $this->assertSame('application/json', $response->type());
 
-        $decoded = json_decode((string) $response->body(), true);
+        /** @var array<string, mixed>|null $decoded */
+        $decoded = json_decode((string)$response->body(), true);
 
         $this->assertIsArray($decoded);
         $this->assertSame('success', $decoded['status']);

@@ -212,13 +212,16 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testFromIdentifiersIgnoresInvalidIdentifiers(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromIdentifiers([
+        /** @var array<int|string> $invalidIdentifiers */
+        $invalidIdentifiers = [
             [],
             new stdClass(),
             null,
             false,
             'invalid',
-        ]);
+        ];
+
+        $dto = MsgdBlueprintRulesDTO::fromIdentifiers($invalidIdentifiers);
 
         $this->assertSame([], $dto->sharingGroupsIds);
         $this->assertSame([], $dto->sharingGroupsUuids);

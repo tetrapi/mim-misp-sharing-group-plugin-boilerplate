@@ -45,12 +45,9 @@ sync_stubs() {
         return 1
     fi
 
-    docker cp "$CONTAINER_ID:/var/www/MISP/app/Lib/cakephp/lib/Cake" .misp-stubs/ 2>/dev/null || true
-    docker cp "$CONTAINER_ID:/var/www/MISP/app/Controller" .misp-stubs/ 2>/dev/null || true
     docker cp "$CONTAINER_ID:/var/www/MISP/app/Model" .misp-stubs/ 2>/dev/null || true
     docker cp "$CONTAINER_ID:/var/www/MISP/app/Lib" .misp-stubs/ 2>/dev/null || true
     docker cp "$CONTAINER_ID:/var/www/MISP/app/Vendor" .misp-stubs/ 2>/dev/null || true
-    docker cp "$CONTAINER_ID:/var/www/MISP/app/Test" .misp-stubs/ 2>/dev/null || true
 
     echo "--> Stubs copied to .misp-stubs/"
 }

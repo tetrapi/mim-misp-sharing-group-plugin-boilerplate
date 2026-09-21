@@ -29,19 +29,20 @@ class MsgdPlugAppController extends AppController
     {
         parent::beforeFilter();
 
-        $this->response->header('X-Content-Type-Options', 'nosniff');
-        $this->response->header('X-Frame-Options', 'SAMEORIGIN');
-        $this->response->header('X-XSS-Protection', '1; mode=block');
-        $this->response->header(
-            'Cache-Control',
-            'no-store, no-cache, must-revalidate, max-age=0'
-        );
-        $this->response->header('Pragma', 'no-cache');
-
         $this->Auth->deny('*');
 
-        $this->Security->csrfCheck = true;
-        $this->Security->validatePost = false; # false because we don't use backend forms
+        if (isset($this->Security)) {
+            $this->Security->csrfCheck = true;
+            $this->Security->validatePost = false; # false because we don't use backend forms
+        }
+
+        $this->response->header([
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-XSS-Protection' => '1; mode=block',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     /**
@@ -51,8 +52,11 @@ class MsgdPlugAppController extends AppController
      */
     protected function getCurrentUser(): ?MsgdUserDTO
     {
-        $user = $this->Auth->user();
+        if (empty($this->Auth)) {
+            return null;
+        }
 
+        $user = $this->Auth->user();
         if (!is_array($user)) {
             return null;
         }

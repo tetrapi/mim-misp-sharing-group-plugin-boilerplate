@@ -456,7 +456,7 @@ final class MsgdApiControllerServiceTest extends TestCase
             ->willReturn(null);
 
         $bpLib->method('getDataSource')
-            ->willReturn(null);
+            ->willThrowException(new RuntimeException('Datasource unavailable.'));
 
         $payload = new MsgdProcessGroupsDTO(
             groups: [10],

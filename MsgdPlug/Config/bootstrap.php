@@ -130,8 +130,10 @@ if ($isPluginEnabled) {
                 return;
             }
 
+            $items = explode(',', $whitelistConfig);
+            $normalizedItems = array_map($normalize, $items);
             $allowedControllers = array_filter(
-                array_map($normalize, explode(',', $whitelistConfig)),
+                $normalizedItems,
                 static fn(string $item): bool => $item !== ''
             );
 
@@ -161,8 +163,8 @@ if ($isPluginEnabled) {
                 $injectedAssetPayload = $msgdInjectorHelper->injectPlugin();
 
                 if (!empty($injectedAssetPayload)) {
-                    /** @phpstan-ignore property.notFound */
-                    $viewInstance->output .= "\n" . $injectedAssetPayload;
+                    $currentOutput = $viewInstance->fetch('content');
+                    $viewInstance->assign('content', $currentOutput . "\n" . $injectedAssetPayload);
                 }
             } catch (Throwable $exception) {
                 MsgdLoggerUtility::logException(

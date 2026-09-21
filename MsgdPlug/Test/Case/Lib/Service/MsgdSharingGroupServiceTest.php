@@ -175,10 +175,13 @@ final class MsgdSharingGroupServiceTest extends TestCase
 
         $this->assertInstanceOf(MsgdMirrorGroupsDTO::class, $result);
         $this->assertSame(
-            [self::UUID_1, self::UUID_2],
+            [10, 20],
             $result->ids
         );
-        $this->assertSame([10, 20], $result->uuids);
+        $this->assertSame(
+            [self::UUID_1, self::UUID_2],
+            $result->uuids
+        );
     }
 
     /**

@@ -110,7 +110,9 @@ class MsgdApiController extends MsgdPlugAppController
             if ($user === null) {
                 return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
             }
-            $requestData = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery($this->request->query);
+            /** @var array<string, mixed> $query */
+            $query = $this->request->query;
+            $requestData = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery($query);
             $groups = $this->msgdService->getSharingGroupsByGeneratedBlueprintGroup($user, $requestData->group);
 
             return $this->buildJsonResponse([
@@ -161,7 +163,9 @@ class MsgdApiController extends MsgdPlugAppController
             if ($user === null) {
                 return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
             }
-            $requestData = MsgdGetSharingGroupsDTO::fromRequestQuery($this->request->query);
+            /** @var array<string, mixed> $query */
+            $query = $this->request->query;
+            $requestData = MsgdGetSharingGroupsDTO::fromRequestQuery($query);
             $groups = $this->msgdService->getAvailableSharingGroups($user, $requestData->all);
 
             return $this->buildJsonResponse([
@@ -211,8 +215,10 @@ class MsgdApiController extends MsgdPlugAppController
             if ($user === null) {
                 return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
             }
+            /** @var array<string, mixed> $data */
+            $data = $this->request->data;
             $requestData = MsgdCheckBlueprintDTO::fromRequestData(
-                $this->request->data,
+                $data,
                 $this->msgdService->isUsingIds()
             );
 
@@ -273,8 +279,10 @@ class MsgdApiController extends MsgdPlugAppController
             if ($user === null) {
                 return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
             }
+            /** @var array<string, mixed> $data */
+            $data = $this->request->data;
             $requestData = MsgdProcessGroupsDTO::fromRequestData(
-                $this->request->data,
+                $data,
                 $this->msgdService->isUsingIds()
             );
 

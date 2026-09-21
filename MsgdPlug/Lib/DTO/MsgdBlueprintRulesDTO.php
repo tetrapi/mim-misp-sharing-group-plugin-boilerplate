@@ -74,8 +74,13 @@ readonly final class MsgdBlueprintRulesDTO
         $ids = $orConditions['sharing_group_id'] ?? [];
         $uuids = $orConditions['sharing_group_uuid'] ?? [];
 
-        $this->sharingGroupsIds = self::cleanIds(is_array($ids) ? $ids : [$ids]);
-        $this->sharingGroupsUuids = self::cleanUuids(is_array($uuids) ? $uuids : [$uuids]);
+        $rawIds = is_array($ids) ? array_values($ids) : [$ids];
+        /** @var array<int|string> $rawIds */
+        $this->sharingGroupsIds = self::cleanIds($rawIds);
+
+        $rawUuids = is_array($uuids) ? array_values($uuids) : [$uuids];
+        /** @var array<string> $rawUuids */
+        $this->sharingGroupsUuids = self::cleanUuids($rawUuids);
 
         $this->allSharingGroupIdentifiers = array_values(
             array_unique(
@@ -88,7 +93,7 @@ readonly final class MsgdBlueprintRulesDTO
     /**
      * Creates blueprint rules from Sharing Group identifiers.
      *
-     * @param array<int, mixed> $identifiers
+     * @param array<int|string> $identifiers
      *
      * @return self
      *
@@ -166,7 +171,7 @@ readonly final class MsgdBlueprintRulesDTO
     /**
      * Normalizes Sharing Group IDs.
      *
-     * @param array<int, mixed> $items
+     * @param array<int|string> $items
      *
      * @return array<int, int>
      */
@@ -191,7 +196,7 @@ readonly final class MsgdBlueprintRulesDTO
     /**
      * Normalizes and validates Sharing Group UUIDs.
      *
-     * @param array<int, mixed> $items
+     * @param array<string> $items
      *
      * @return array<int, string>
      */
@@ -200,8 +205,9 @@ readonly final class MsgdBlueprintRulesDTO
         $result = [];
 
         foreach ($items as $item) {
-            if (is_string($item) && MsgdSanitizerUtility::isValidUuid(trim($item))) {
-                $result[] = trim($item);
+            $trimmed = trim($item);
+            if (MsgdSanitizerUtility::isValidUuid($trimmed)) {
+                $result[] = $trimmed;
             }
         }
 
