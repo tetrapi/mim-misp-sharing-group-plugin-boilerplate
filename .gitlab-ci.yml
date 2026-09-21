@@ -133,43 +133,39 @@ iac-config-scan:
 
 phpunit:
   stage: integration
-  image: docker:latest
+  image: php:8.1-cli
   services:
-    - name: docker:dind
-      alias: docker
+    - name: mysql:8.0
+      alias: db
   variables:
-    # Utilizando o padrão atual seguro do GitLab CI (TLS na porta 2376)
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
+    MYSQL_DATABASE: misp_test
+    MYSQL_ROOT_PASSWORD: root
   needs: []
-  script:
-    - echo "--> Aguardando o daemon do Docker iniciar..."
-    - for i in $(seq 1 15); do docker info >/dev/null 2>&1 && break || sleep 2; done
+  before_script:
+    - apt-get update && apt-get install -y git unzip
+    - docker-php-ext-install pdo pdo_mysql
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-    - echo "--> Preparing environment variables file..."
-    - if [ ! -f .env ] && [ -f example.env ]; then cp example.env .env; fi
+    - git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git /var/www/MISP
 
-    - echo "--> Starting development containers..."
-    - docker compose -f docker-compose-dev.yml up -d
+    - mkdir -p /var/www/MISP/app/Plugin/MsgdPlug
+    - cp -a . /var/www/MISP/app/Plugin/MsgdPlug/
+
+    - cd /var/www/MISP/app
+    - composer install --ignore-platform-reqs --no-interaction
+
+    - cp Config/core.default.php Config/core.php
+    - cp Config/bootstrap.default.php Config/bootstrap.php
     - |
-      echo "--> Waiting for misp-core container to be healthy..."
-      for i in $(seq 1 60); do
-        STATUS=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" misp-core 2>/dev/null || echo "missing")
-        if [ "$STATUS" == "healthy" ]; then
-          echo "--> misp-core container is healthy!"
-          break
-        elif [ "$STATUS" == "unhealthy" ]; then
-          echo "--> [ERROR] misp-core container reported unhealthy status."
-          exit 1
-        fi
-        sleep 5
-      done
-
-    - echo "--> Running plugin installer..."
-    - docker compose -f docker-compose-dev.yml exec -T misp-core bash /var/www/MISP/msgd_installer.sh --auto
-
-    - echo "--> Executing MsgdPlug PHPUnit tests..."
-    - docker compose -f docker-compose-dev.yml exec -T misp-core /var/www/MISP/app/Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
+      cat <<EOF > Config/database.php
+      <?php
+      class DATABASE_CONFIG {
+          public \$default = array('datasource' => 'Database/Mysql', 'host' => 'db', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+          public \$test = array('datasource' => 'Database/Mysql', 'host' => 'db', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+      }
+      EOF
+  script:
+    - ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
 
 # ==============================================================================
 # STAGE 4: sbom - EU CRA Software Inventory Generation
