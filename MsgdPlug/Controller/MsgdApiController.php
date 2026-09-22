@@ -204,16 +204,19 @@ class MsgdApiController extends MsgdPlugAppController
         $this->request->allowMethod(['post']);
 
         if (!$this->validateRequest()) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'Unauthorized access.',
-            ], 403);
+            ]), 403);
         }
 
         try {
             $user = $this->getCurrentUser();
             if ($user === null) {
-                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+                return $this->buildJsonResponse($this->appendNextToken([
+                    'status' => 'error',
+                    'message' => 'Unauthorized',
+                ]), 401);
             }
             /** @var array<string, mixed> $data */
             $data = $this->request->data;
@@ -229,22 +232,22 @@ class MsgdApiController extends MsgdPlugAppController
                 'exists' => $exists,
             ]));
         } catch (InvalidArgumentException) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'Invalid payload format for blueprint verification.',
-            ], 400);
+            ]), 400);
         } catch (ForbiddenException $exception) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => $exception->getMessage(),
-            ], 403);
+            ]), 403);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException($exception, '[MsgdApiController] checkBlueprint failed');
 
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'Failed to verify blueprint existence.',
-            ], 500);
+            ]), 500);
         }
     }
 
@@ -268,16 +271,19 @@ class MsgdApiController extends MsgdPlugAppController
         $this->request->allowMethod(['post']);
 
         if (!$this->validateRequest()) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'Unauthorized access.',
-            ], 403);
+            ]), 403);
         }
 
         try {
             $user = $this->getCurrentUser();
             if ($user === null) {
-                return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
+                return $this->buildJsonResponse($this->appendNextToken([
+                    'status' => 'error',
+                    'message' => 'Unauthorized',
+                ]), 401);
             }
             /** @var array<string, mixed> $data */
             $data = $this->request->data;
@@ -296,10 +302,10 @@ class MsgdApiController extends MsgdPlugAppController
                     ]));
                 }
 
-                return $this->buildJsonResponse([
+                return $this->buildJsonResponse($this->appendNextToken([
                     'status' => 'error',
                     'message' => 'Target sharing group could not be found.',
-                ], 404);
+                ]), 404);
             }
 
             $result = $this->msgdService->processMultiple($user, $requestData);
@@ -309,22 +315,22 @@ class MsgdApiController extends MsgdPlugAppController
                 'group' => $result,
             ]));
         } catch (InvalidArgumentException) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'Invalid payload format for processing groups.',
-            ], 400);
+            ]), 400);
         } catch (ForbiddenException $exception) {
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => $exception->getMessage(),
-            ], 403);
+            ]), 403);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException($exception, '[MsgdApiController] processGroups failed');
 
-            return $this->buildJsonResponse([
+            return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'error',
                 'message' => 'System error while processing blueprint.',
-            ], 500);
+            ]), 500);
         }
     }
 }
