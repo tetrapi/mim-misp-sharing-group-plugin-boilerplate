@@ -285,7 +285,7 @@ class MsgdBlueprintService
     }
 
     /**
-     * Retrieves all sharing groups currently associated with an active blueprint.
+     * Retrieves all sharing group IDs currently associated with an active blueprint.
      *
      * @return array<int, int>
      *
@@ -296,31 +296,22 @@ class MsgdBlueprintService
         $this->ensureModelAvailable();
 
         try {
-            $blueprints = $this->sharingGroupBlueprint->find('all', [
+            $rawIds = $this->sharingGroupBlueprint->find('list', [
+                'fields' => ['SharingGroupBlueprint.sharing_group_id'],
+                'conditions' => [
+                    'SharingGroupBlueprint.sharing_group_id >' => 0,
+                ],
                 'recursive' => -1,
                 'callbacks' => false,
             ]);
 
-            if (!is_array($blueprints)) {
+            if (!is_array($rawIds)) {
                 return [];
             }
 
-            $ids = [];
+            $ids = array_map('intval', array_values(array_unique($rawIds)));
 
-            foreach ($blueprints as $blueprint) {
-                if (!is_array($blueprint)) {
-                    continue;
-                }
-
-                /** @var array<string, mixed> $blueprint */
-                $sharingGroupId = MsgdBlueprintDTO::fromArray($blueprint)->sharingGroupId;
-
-                if ($sharingGroupId > 0) {
-                    $ids[] = $sharingGroupId;
-                }
-            }
-
-            return array_values(array_unique($ids));
+            return array_values(array_filter($ids, static fn(int $id): bool => $id > 0));
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -443,13 +434,13 @@ class MsgdBlueprintService
             : 'MsgdPlug Blueprint - ' . date('Y-m-d H:i:s');
 
         $newBlueprint = new MsgdBlueprintDTO(
+            rules: MsgdBlueprintRulesDTO::fromIdentifiers($payload->groups),
             id: 0,
             uuid: CakeText::uuid(),
             name: $blueprintName,
             userId: $user->id,
             orgId: $user->orgId,
             sharingGroupId: 0,
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($payload->groups),
         );
 
         if (
