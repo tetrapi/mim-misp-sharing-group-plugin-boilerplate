@@ -140,17 +140,17 @@ install_bootstrap() {
         return
     fi
 
-    local block="\n # Multi Sharing Group Plugin \n if (Configure::read('Plugin.MsgdPlug_enabled')) {\n    CakePlugin::load('MsgdPlug', array('bootstrap' => true));\n}"
+    local block="\n # Multi Sharing Group Plugin \n if (Configure::read('Plugin.MsgdPlug_enabled')) {\n    CakePlugin::load('MsgdPlug', array('bootstrap' => true, 'routes' => true));\n}"
 
     echo -e "\n${block}" >> "$path"
-    echo "[OK] bootstrap installed"
+    echo "[OK] bootstrap installed (with routes enabled)"
 }
 
 remove_bootstrap() {
     local path="${MISP_PATH}/app/Config/bootstrap.php"
     backup "$path"
 
-    perl -0777 -i -pe "s/\n?if\s*\(\s*Configure::read\(['\"]Plugin\.MsgdPlug_enabled['\"]\)\s*\)\s*\{\s*CakePlugin::load\(['\"]MsgdPlug['\"]\s*,\s*array\(['\"]bootstrap['\"]\s*=>\s*true\)\);\s*\}//gs" "$path"
+    perl -0777 -i -pe "s/\n?if\s*\(\s*Configure::read\(['\"]Plugin\.MsgdPlug_enabled['\"]\)\s*\)\s*\{\s*CakePlugin::load\(['\"]MsgdPlug['\"]\s*,\s*array\(['\"]bootstrap['\"]\s*=>\s*true(?:,\s*['\"]routes['\"]\s*=>\s*true)?\)\);\s*\}//gs" "$path"
     sed -i '/MsgdPlug/d' "$path"
     echo "[OK] bootstrap removed"
 }
@@ -221,7 +221,7 @@ install_acl() {
         return
     fi
 
-    local patch="        'msgdApi' => array(\n            'processGroups' => array('*'),\n            'getSharingGroups' => array('*'),\n            'getBlueprintRulesGroups' => array('*'),\n            'checkBlueprint' => array('*'),\n            'checkUserPermission' => array('*'),\n        ),"
+    local patch="        'msgdApi' => array(\n            'processGroups' => array('*'),\n            'process-groups' => array('*'),\n            'getSharingGroups' => array('*'),\n            'get-sharing-groups' => array('*'),\n            'getBlueprintRulesGroups' => array('*'),\n            'get-blueprint-rules-groups' => array('*'),\n            'checkBlueprint' => array('*'),\n            'check-blueprint' => array('*'),\n            'checkUserPermission' => array('*'),\n            'check-user-permission' => array('*'),\n        ),"
 
     perl -i -pe "s/(const ACL_LIST\s*=\s*array\s*\()/\$1\n$patch/g" "$path"
     echo "[OK] ACL installed"

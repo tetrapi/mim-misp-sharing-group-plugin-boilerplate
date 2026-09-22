@@ -421,7 +421,7 @@ cp -r MsgdPlug /var/www/MISP/app/Plugin/
 
 ```php
 if (Configure::read('Plugin.MsgdPlug_enabled')) {
-    CakePlugin::load('MsgdPlug', array('bootstrap' => true));
+    CakePlugin::load('MsgdPlug', array('bootstrap' => true, 'routes' => true));
 }
 ```
 

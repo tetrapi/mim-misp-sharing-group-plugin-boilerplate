@@ -42,7 +42,7 @@ class MsgdApiController extends MsgdPlugAppController
      *
      * @api
      *
-     * @route GET /msgd_plug/msgd_api/checkUserPermission
+     * @route GET /msgd-plug/msgd-api/check-user-permission
      */
     public function checkUserPermission(): CakeResponse
     {
@@ -89,7 +89,7 @@ class MsgdApiController extends MsgdPlugAppController
      *
      * @api
      *
-     * @route GET /msgd_plug/msgd_api/getBlueprintRulesGroups
+     * @route GET /msgd-plug/msgd-api/get-blueprint-rules-groups
      *
      * @apiQuery {int} [group]
      * Blueprint group ID used to retrieve associated sharing groups.
@@ -141,7 +141,7 @@ class MsgdApiController extends MsgdPlugAppController
      *
      * @api
      *
-     * @route GET /msgd_plug/msgd_api/getSharingGroups
+     * @route GET /msgd-plug/msgd-api/get-sharing-groups
      *
      * @apiQuery {bool} [all]
      * If true, returns all sharing groups; otherwise, returns only
@@ -194,7 +194,7 @@ class MsgdApiController extends MsgdPlugAppController
      *
      * @api
      *
-     * @route POST /msgd_plug/msgd_api/checkBlueprint
+     * @route POST /msgd-plug/msgd-api/check-blueprint
      *
      * @apiParam {array<int, int|string>} [groups]
      * List of group IDs or UUIDs to verify blueprint existence for.
@@ -255,7 +255,7 @@ class MsgdApiController extends MsgdPlugAppController
      *
      * @api
      *
-     * @route POST /msgd_plug/msgd_api/processGroups
+     * @route POST /msgd-plug/msgd-api/process-groups
      *
      * @apiParam {array<int, int|string>} [groups]
      * Array of sharing group IDs or UUIDs to process or combine.
