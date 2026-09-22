@@ -56,6 +56,7 @@
     dragStartX: 0,
     dragStartY: 0,
     searchDebounceTimeout: null,
+    _searchCache: [],
 
     init: function () {
       this.utils = window.MsgdUtils;
@@ -99,6 +100,8 @@
         clearTimeout(this.searchDebounceTimeout);
         this.searchDebounceTimeout = null;
       }
+
+      this._searchCache = [];
     },
 
     bindResetEvent: function () {
@@ -270,20 +273,50 @@
       });
     },
 
-    filterGroups: function (searchQuery) {
-      const rows = document.querySelectorAll(
-        SELECTORS.GROUPS_CONTAINER + " " + SELECTORS.OPERATION_ROW,
-      );
+    buildSearchCache: function () {
+      const container = document.querySelector(SELECTORS.GROUPS_CONTAINER);
+      if (!container) {
+        this._searchCache = [];
+        return;
+      }
 
-      rows.forEach(function (row) {
+      const rows = container.querySelectorAll(SELECTORS.OPERATION_ROW);
+      const cache = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const checkbox = row.querySelector(SELECTORS.GROUP_CHECKBOX);
-
-        const groupName = checkbox?.dataset?.name
+        const name = checkbox?.dataset?.name
           ? checkbox.dataset.name.toLowerCase()
           : "";
 
-        row.style.display = groupName.includes(searchQuery) ? "" : "none";
-      });
+        cache.push({
+          element: row,
+          name: name,
+        });
+      }
+
+      this._searchCache = cache;
+    },
+
+    filterGroups: function (searchQuery) {
+      if (!this._searchCache.length) {
+        this.buildSearchCache();
+      }
+
+      const query = searchQuery.trim().toLowerCase();
+      const cache = this._searchCache;
+      const len = cache.length;
+
+      for (let i = 0; i < len; i++) {
+        const item = cache[i];
+        const isMatch = !query || item.name.includes(query);
+        const targetDisplay = isMatch ? "" : "none";
+
+        if (item.element.style.display !== targetDisplay) {
+          item.element.style.display = targetDisplay;
+        }
+      }
     },
 
     renderGroupsTable: function (
@@ -318,6 +351,7 @@
       );
 
       $(this.utils.selectors.groupsContainer).html(wrapperHtml);
+      this.buildSearchCache();
     },
 
     normalizeGroups: function (groups, useIds) {

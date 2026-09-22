@@ -190,7 +190,7 @@
 
     escapeHtml: function (rawText) {
       if (rawText === null || rawText === undefined) return "";
-      return String(rawText).replace(/[&<>"']/g, function (char) {
+      return String(rawText).replace(/[&<>"'`]/g, function (char) {
         switch (char) {
           case "&":
             return "&amp;";
@@ -202,6 +202,8 @@
             return "&quot;";
           case "'":
             return "&#039;";
+          case "`":
+            return "&#96;";
           default:
             return char;
         }
