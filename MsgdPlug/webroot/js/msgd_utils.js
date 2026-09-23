@@ -240,21 +240,24 @@
       const targetValue = String(groupIdOrUrl).trim();
       // eslint-disable-next-line no-control-regex
       const sanitizedCheck = targetValue.replace(/[\x00-\x20\x7F-\xFF]/g, "");
-      if (/^(javascript|data|vbscript|file):/i.test(sanitizedCheck)) return "";
+      if (/^(javascript|data|vbscript|file|https?):/i.test(sanitizedCheck))
+        return "";
 
-      let sharingGroupUrl;
       const baseUrl =
         window.MsgdPlugData && window.MsgdPlugData[ROUTES.SG_VIEW_BASE_URL]
           ? window.MsgdPlugData[ROUTES.SG_VIEW_BASE_URL]
           : "/sharing_groups/view";
 
-      if (targetValue.includes("/") || /^https?:\/\//i.test(targetValue)) {
-        sharingGroupUrl = this.escapeHtml(targetValue);
-      } else {
-        sharingGroupUrl = this.escapeHtml(
-          baseUrl.replace(/\/$/, "") + "/" + targetValue,
-        );
-      }
+      const rawId = targetValue
+        .split("/")
+        .pop()
+        .replace(/[?#].*$/, "")
+        .trim();
+      if (!rawId) return "";
+
+      const sharingGroupUrl = this.escapeHtml(
+        baseUrl.replace(/\/$/, "") + "/" + rawId,
+      );
 
       return this.renderTemplate(TEMPLATES.EYE_BUTTON, {
         VIEW_URL: sharingGroupUrl,
