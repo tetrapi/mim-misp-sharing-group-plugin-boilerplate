@@ -129,13 +129,13 @@ final class MsgdApiControllerServiceTest extends TestCase
     public function testIsUserWhiteList(): void
     {
         Configure::write(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value,
+            MsgdPluginConfigEnum::user_permissions_whitelist->value,
             'user@example.com'
         );
 
         $this->assertSame(
             'user@example.com',
-            $this->createService()->isUserWhiteList()
+            $this->createService()->getUserWhiteList()
         );
     }
 
@@ -146,7 +146,7 @@ final class MsgdApiControllerServiceTest extends TestCase
      */
     public function testIsUsingIds(): void
     {
-        Configure::write(MsgdPluginConfigEnum::USE_IDS->value, true);
+        Configure::write(MsgdPluginConfigEnum::user_ids->value, true);
 
         $this->assertTrue($this->createService()->isUsingIds());
     }
@@ -189,7 +189,7 @@ final class MsgdApiControllerServiceTest extends TestCase
         $user = $this->createUser(false, false);
 
         Configure::write(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value,
+            MsgdPluginConfigEnum::user_permissions_whitelist->value,
             'allowed@example.com'
         );
 
@@ -220,7 +220,7 @@ final class MsgdApiControllerServiceTest extends TestCase
         $user = $this->createUser(false, false);
 
         Configure::write(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value,
+            MsgdPluginConfigEnum::user_permissions_whitelist->value,
             '*'
         );
 
@@ -237,7 +237,7 @@ final class MsgdApiControllerServiceTest extends TestCase
     public function testHasSharingGroupAccessReturnsFalse(): void
     {
         Configure::write(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value,
+            MsgdPluginConfigEnum::user_permissions_whitelist->value,
             ''
         );
 
@@ -257,7 +257,7 @@ final class MsgdApiControllerServiceTest extends TestCase
     public function testHasSharingGroupAccessThrowsForbiddenException(): void
     {
         Configure::write(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value,
+            MsgdPluginConfigEnum::user_permissions_whitelist->value,
             ''
         );
 

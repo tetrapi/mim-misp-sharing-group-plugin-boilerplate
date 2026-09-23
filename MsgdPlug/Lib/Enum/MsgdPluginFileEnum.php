@@ -17,16 +17,16 @@ declare(strict_types=1);
  */
 enum MsgdPluginFileEnum: string
 {
-    case MSGD_INJECTOR_PHP = 'MsgdInjector';
-    case STYLE_CSS = 'msgd_style';
-    case VIEW_JS = 'msgd_view';
-    case FORM_JS = 'msgd_form';
-    case FORM_UI_JS = 'msgd_form_ui';
-    case UTILS_JS = 'msgd_utils';
-    case TEMPLATES_CTP = 'Common/msgd_templates';
-    case UTILS_CTP = 'Common/msgd_utils';
-    case FORM_CTP = 'Form/msgd_form';
-    case VIEW_CTP = 'View/msgd_view';
+    case msgd_injector_php = 'MsgdInjector';
+    case msgd_style_css = 'msgd_style';
+    case msgd_view_js = 'msgd_view';
+    case msgd_form_js = 'msgd_form';
+    case msgd_form_ui_js = 'msgd_form_ui';
+    case msgd_utils_js = 'msgd_utils';
+    case msgd_templates_ctp = 'Common/msgd_templates';
+    case msgd_utils_ctp = 'Common/msgd_utils';
+    case msgd_form_ctp = 'Form/msgd_form';
+    case msgd_view_ctp = 'View/msgd_view';
 
     /**
      * Returns the full CakePHP file path.

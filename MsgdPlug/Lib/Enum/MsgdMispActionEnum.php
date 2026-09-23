@@ -17,10 +17,10 @@ declare(strict_types=1);
  */
 enum MsgdMispActionEnum: string
 {
-    case ADD = 'add';
-    case EDIT = 'edit';
-    case VIEW = 'view';
-    case INDEX = 'index';
+    case add = 'add';
+    case edit = 'edit';
+    case view = 'view';
+    case index = 'index';
 
     /**
      * Safely converts an action string to its matching enum case.
@@ -46,8 +46,8 @@ enum MsgdMispActionEnum: string
     public function getActionElement(): MsgdPluginFileEnum
     {
         return match ($this) {
-            self::ADD, self::EDIT => MsgdPluginFileEnum::FORM_CTP,
-            self::VIEW, self::INDEX => MsgdPluginFileEnum::VIEW_CTP,
+            self::add, self::edit => MsgdPluginFileEnum::msgd_form_ctp,
+            self::view, self::index => MsgdPluginFileEnum::msgd_view_ctp,
         };
     }
 

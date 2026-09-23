@@ -437,7 +437,7 @@
       this.loadGroupsRequest = groupsXhr;
 
       Promise.all([permissionPromise, groupsXhr])
-        .then(([response]) => {
+        .then(([_, response]) => {
           this.loadGroupsRequest = null;
 
           if (response?.status === this.utils.statusTypes.SUCCESS) {
@@ -617,7 +617,7 @@
       }
 
       const enabled =
-        String($distSelect.val()) !== DistributionLevels.SHARING_GROUP ||
+        $distSelect.val() !== DistributionLevels.SHARING_GROUP ||
         this.confirmedValues.length > 0;
 
       if ($submit.length) {

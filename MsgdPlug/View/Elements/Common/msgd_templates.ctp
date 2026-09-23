@@ -17,7 +17,7 @@ declare(strict_types=1);
  */
 ?>
 
-<?= $this->Html->css(MsgdPluginFileEnum::STYLE_CSS->getPath(), ['inline' => true]); ?>
+<?= $this->Html->css(MsgdPluginFileEnum::msgd_style_css->getPath(), ['inline' => true]); ?>
 
 <?php
 

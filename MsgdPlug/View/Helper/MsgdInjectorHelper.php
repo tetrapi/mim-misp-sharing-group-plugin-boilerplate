@@ -67,8 +67,8 @@ final class MsgdInjectorHelper extends AppHelper
             self::$alreadyInjected = true;
 
             $renderedHtmlSegments = [
-                $this->renderElement(MsgdPluginFileEnum::TEMPLATES_CTP),
-                $this->renderElement(MsgdPluginFileEnum::UTILS_CTP, ['urls' => $this->buildUrlMap()]),
+                $this->renderElement(MsgdPluginFileEnum::msgd_templates_ctp),
+                $this->renderElement(MsgdPluginFileEnum::msgd_utils_ctp, ['urls' => $this->buildUrlMap()]),
             ];
 
             $actionElement = $supportedAction->getActionElement();
@@ -98,40 +98,40 @@ final class MsgdInjectorHelper extends AppHelper
     private function buildUrlMap(): array
     {
         return [
-            MsgdPluginActionEnum::CHECK_USER_PERMISSION->getRouteKey() => (string) $this->Html->url([
+            MsgdPluginActionEnum::check_user_permission->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
-                'action' => MsgdPluginActionEnum::CHECK_USER_PERMISSION->value,
+                'action' => MsgdPluginActionEnum::check_user_permission->value,
             ]),
 
-            MsgdPluginActionEnum::PROCESS_GROUPS->getRouteKey() => (string) $this->Html->url([
+            MsgdPluginActionEnum::process_groups->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
-                'action' => MsgdPluginActionEnum::PROCESS_GROUPS->value,
+                'action' => MsgdPluginActionEnum::process_groups->value,
             ]),
 
-            MsgdPluginActionEnum::GET_SHARING_GROUPS->getRouteKey() => (string) $this->Html->url([
+            MsgdPluginActionEnum::get_sharing_groups->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
-                'action' => MsgdPluginActionEnum::GET_SHARING_GROUPS->value,
+                'action' => MsgdPluginActionEnum::get_sharing_groups->value,
             ]),
 
-            MsgdPluginActionEnum::CHECK_BLUEPRINT->getRouteKey() => (string) $this->Html->url([
+            MsgdPluginActionEnum::check_blueprint->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
-                'action' => MsgdPluginActionEnum::CHECK_BLUEPRINT->value,
+                'action' => MsgdPluginActionEnum::check_blueprint->value,
             ]),
 
-            MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->getRouteKey() => (string) $this->Html->url([
+            MsgdPluginActionEnum::get_blueprint_rules_groups->getRouteKey() => (string) $this->Html->url([
                 'plugin' => 'msgd_plug',
                 'controller' => 'msgd_api',
-                'action' => MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->value,
+                'action' => MsgdPluginActionEnum::get_blueprint_rules_groups->value,
             ]),
 
-            MsgdMispActionEnum::VIEW->getRouteKey() => (string) $this->Html->url([
+            MsgdMispActionEnum::view->getRouteKey() => (string) $this->Html->url([
                 'plugin' => false,
                 'controller' => 'sharing_groups',
-                'action' => MsgdMispActionEnum::VIEW->value,
+                'action' => MsgdMispActionEnum::view->value,
             ]),
         ];
     }

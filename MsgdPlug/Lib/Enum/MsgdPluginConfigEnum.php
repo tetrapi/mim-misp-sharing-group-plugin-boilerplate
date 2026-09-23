@@ -17,9 +17,9 @@ declare(strict_types=1);
  */
 enum MsgdPluginConfigEnum: string
 {
-    case ENABLE = 'Plugin.MsgdPlug_enabled';
-    case USE_IDS = 'Plugin.MsgdPlug_use_ids';
-    case DEBUG = 'Plugin.MsgdPlug_debug';
-    case CONTROLLER_WHITELIST = 'Plugin.MsgdPlug_controller_whitelist';
-    case USER_PERMISSIONS_WHITELIST = 'Plugin.MsgdPlug_user_permissions_whitelist';
+    case enable = 'Plugin.MsgdPlug_enabled';
+    case user_ids = 'Plugin.MsgdPlug_use_ids';
+    case debug = 'Plugin.MsgdPlug_debug';
+    case controller_whitelist = 'Plugin.MsgdPlug_controller_whitelist';
+    case user_permissions_whitelist = 'Plugin.MsgdPlug_user_permissions_whitelist';
 }

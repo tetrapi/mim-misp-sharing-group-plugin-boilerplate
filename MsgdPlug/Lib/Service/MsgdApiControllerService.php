@@ -46,10 +46,10 @@ class MsgdApiControllerService
      *
      * @return string
      */
-    public function isUserWhiteList(): string
+    public function getUserWhiteList(): string
     {
         $rawWhitelist = Configure::read(
-            MsgdPluginConfigEnum::USER_PERMISSIONS_WHITELIST->value
+            MsgdPluginConfigEnum::user_permissions_whitelist->value
         );
 
         return is_scalar($rawWhitelist) ? (string) $rawWhitelist : '';
@@ -62,7 +62,7 @@ class MsgdApiControllerService
      */
     public function isUsingIds(): bool
     {
-        return (bool)Configure::read(MsgdPluginConfigEnum::USE_IDS->value);
+        return (bool)Configure::read(MsgdPluginConfigEnum::user_ids->value);
     }
 
     /**
@@ -82,7 +82,7 @@ class MsgdApiControllerService
         }
 
         $userEmail = strtolower(trim($user->email));
-        $whitelistConfig = $this->isUserWhiteList();
+        $whitelistConfig = $this->getUserWhiteList();
 
         if ($whitelistConfig !== '') {
             $allowedList = array_filter(

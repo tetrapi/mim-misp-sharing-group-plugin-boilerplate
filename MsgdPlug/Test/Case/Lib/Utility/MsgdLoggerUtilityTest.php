@@ -49,7 +49,7 @@ class MsgdLoggerUtilityTest extends TestCase
         ]);
 
         Configure::write(
-            MsgdPluginConfigEnum::DEBUG->value,
+            MsgdPluginConfigEnum::debug->value,
             false
         );
     }
@@ -118,7 +118,7 @@ class MsgdLoggerUtilityTest extends TestCase
     public function testDebugMessageIsWrittenWhenEnabled(): void
     {
         Configure::write(
-            MsgdPluginConfigEnum::DEBUG->value,
+            MsgdPluginConfigEnum::debug->value,
             true
         );
 

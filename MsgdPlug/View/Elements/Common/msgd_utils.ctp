@@ -31,12 +31,12 @@ try {
         );
     } else {
         $expectedRouteKeys = [
-            MsgdPluginActionEnum::CHECK_USER_PERMISSION->getRouteKey(),
-            MsgdPluginActionEnum::PROCESS_GROUPS->getRouteKey(),
-            MsgdPluginActionEnum::GET_SHARING_GROUPS->getRouteKey(),
-            MsgdPluginActionEnum::CHECK_BLUEPRINT->getRouteKey(),
-            MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->getRouteKey(),
-            MsgdMispActionEnum::VIEW->getRouteKey(),
+            MsgdPluginActionEnum::check_user_permission->getRouteKey(),
+            MsgdPluginActionEnum::process_groups->getRouteKey(),
+            MsgdPluginActionEnum::get_sharing_groups->getRouteKey(),
+            MsgdPluginActionEnum::check_blueprint->getRouteKey(),
+            MsgdPluginActionEnum::get_blueprint_rules_groups->getRouteKey(),
+            MsgdMispActionEnum::view->getRouteKey(),
         ];
 
         $invalidRouteKeys = [];
@@ -64,22 +64,22 @@ try {
 
     $utilitiesConfiguration = [
         'statusTypes' => [
-            'SUCCESS' => MsgdPluginStatusEnum::SUCCESS->value,
-            'ERROR' => MsgdPluginStatusEnum::ERROR->value,
-            'INFO' => MsgdPluginStatusEnum::INFO->value,
-            'WARNING' => MsgdPluginStatusEnum::WARNING->value,
+            'SUCCESS' => MsgdPluginStatusEnum::success->value,
+            'ERROR' => MsgdPluginStatusEnum::error->value,
+            'INFO' => MsgdPluginStatusEnum::info->value,
+            'WARNING' => MsgdPluginStatusEnum::warning->value,
         ],
         'routeKeys' => [
-            'SG_VIEW_BASE_URL' => MsgdMispActionEnum::VIEW->value,
-            'CHECK_USER_PERMISSION' => MsgdPluginActionEnum::CHECK_USER_PERMISSION->getRouteKey(),
-            'CHECK_BLUEPRINT' => MsgdPluginActionEnum::CHECK_BLUEPRINT->getRouteKey(),
-            'GET_SHARING_GROUPS' => MsgdPluginActionEnum::GET_SHARING_GROUPS->getRouteKey(),
-            'PROCESS_GROUPS' => MsgdPluginActionEnum::PROCESS_GROUPS->getRouteKey(),
-            'GET_BLUEPRINT_RULES_GROUPS' => MsgdPluginActionEnum::GET_BLUEPRINT_RULES_GROUPS->getRouteKey(),
+            'SG_VIEW_BASE_URL' => MsgdMispActionEnum::view->value,
+            'CHECK_USER_PERMISSION' => MsgdPluginActionEnum::check_user_permission->getRouteKey(),
+            'CHECK_BLUEPRINT' => MsgdPluginActionEnum::check_blueprint->getRouteKey(),
+            'GET_SHARING_GROUPS' => MsgdPluginActionEnum::get_sharing_groups->getRouteKey(),
+            'PROCESS_GROUPS' => MsgdPluginActionEnum::process_groups->getRouteKey(),
+            'GET_BLUEPRINT_RULES_GROUPS' => MsgdPluginActionEnum::get_blueprint_rules_groups->getRouteKey(),
         ],
         'useGroupsIds' => [
             'USE_IDS' => (bool)Configure::read(
-                MsgdPluginConfigEnum::USE_IDS->value
+                MsgdPluginConfigEnum::user_ids->value
             ),
         ],
     ];
@@ -116,7 +116,7 @@ try {
     );
 
     echo $this->Html->script(
-        MsgdPluginFileEnum::UTILS_JS->getPath(),
+        MsgdPluginFileEnum::msgd_utils_js->getPath(),
         ['inline' => true]
     );
 } catch (Throwable $exception) {

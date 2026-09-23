@@ -41,7 +41,7 @@ final class MsgdLoggerUtility
 
         if ($sanitizedLogSeverity === 'debug') {
             $isDebugLogEnabled = (bool)Configure::read(
-                MsgdPluginConfigEnum::DEBUG->value
+                MsgdPluginConfigEnum::debug->value
             );
 
             if (!$isDebugLogEnabled) {

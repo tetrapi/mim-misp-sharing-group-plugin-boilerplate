@@ -28,8 +28,8 @@ try {
         );
     } else {
         $expectedViewActions = [
-            MsgdMispActionEnum::VIEW,
-            MsgdMispActionEnum::INDEX,
+            MsgdMispActionEnum::view,
+            MsgdMispActionEnum::index,
         ];
 
         if (!in_array($actionInstance, $expectedViewActions, true)) {
@@ -46,8 +46,8 @@ try {
     $viewConfiguration = [
         'activeMode' => $actionInstance?->value,
         'modes' => [
-            'VIEW' => MsgdMispActionEnum::VIEW->value,
-            'INDEX' => MsgdMispActionEnum::INDEX->value,
+            'VIEW' => MsgdMispActionEnum::view->value,
+            'INDEX' => MsgdMispActionEnum::index->value,
         ],
         'messages' => [
             'CONFIG_ERROR' => __d('msgd_plug', 'Configuration error: Invalid API endpoint.'),
@@ -72,7 +72,7 @@ try {
         . '));';
 
     echo $this->Html->scriptBlock($viewConfigurationScript, ['inline' => true]);
-    echo $this->Html->script(MsgdPluginFileEnum::VIEW_JS->getPath(), ['inline' => true]);
+    echo $this->Html->script(MsgdPluginFileEnum::msgd_view_js->getPath(), ['inline' => true]);
 } catch (Throwable $exception) {
     MsgdLoggerUtility::logException(
         $exception,

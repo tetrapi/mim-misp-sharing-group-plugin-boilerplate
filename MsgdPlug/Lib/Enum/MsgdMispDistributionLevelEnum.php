@@ -15,12 +15,12 @@ declare(strict_types=1);
  * @package    MsgdPlug
  * @subpackage MsgdPlug.Lib.Enum
  */
-enum MsgdMispDistributionLevelEnum: string
+enum MsgdMispDistributionLevelEnum: int
 {
-    case YOUR_ORGANISATION_ONLY = '0';
-    case THIS_COMMUNITY_ONLY = '1';
-    case CONNECTED_COMMUNITIES = '2';
-    case ALL_COMMUNITIES = '3';
-    case SHARING_GROUP = '4';
-    case INHERIT = '5';
+    case your_organization_only = 0;
+    case this_community_only = 1;
+    case connected_communities = 2;
+    case all_communities = 3;
+    case sharing_group = 4;
+    case inherit = 5;
 }

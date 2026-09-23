@@ -17,8 +17,8 @@ declare(strict_types=1);
  */
 enum MsgdPluginStatusEnum: string
 {
-    case SUCCESS = 'success';
-    case ERROR = 'error';
-    case INFO = 'info';
-    case WARNING = 'warning';
+    case success = 'success';
+    case error = 'error';
+    case info = 'info';
+    case warning = 'warning';
 }

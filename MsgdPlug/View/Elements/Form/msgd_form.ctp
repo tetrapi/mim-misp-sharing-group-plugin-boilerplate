@@ -31,8 +31,8 @@ try {
         $actionInstance = null;
     } else {
         $expectedFormActions = [
-            MsgdMispActionEnum::ADD,
-            MsgdMispActionEnum::EDIT,
+            MsgdMispActionEnum::add,
+            MsgdMispActionEnum::edit,
         ];
 
         if (!in_array($actionInstance, $expectedFormActions, true)) {
@@ -51,12 +51,12 @@ try {
         'activeMode' => $actionInstance?->value,
 
         'modes' => [
-            'ADD' => MsgdMispActionEnum::ADD->value,
-            'EDIT' => MsgdMispActionEnum::EDIT->value,
+            'ADD' => MsgdMispActionEnum::add->value,
+            'EDIT' => MsgdMispActionEnum::edit->value,
         ],
 
         'distLevel' => [
-            'SHARING_GROUP' => MsgdMispDistributionLevelEnum::SHARING_GROUP->value,
+            'SHARING_GROUP' => MsgdMispDistributionLevelEnum::sharing_group->value,
         ],
 
         'messages' => [
@@ -155,12 +155,12 @@ try {
     );
 
     echo $this->Html->script(
-        MsgdPluginFileEnum::FORM_UI_JS->getPath(),
+        MsgdPluginFileEnum::msgd_form_ui_js->getPath(),
         ['inline' => true]
     );
 
     echo $this->Html->script(
-        MsgdPluginFileEnum::FORM_JS->getPath(),
+        MsgdPluginFileEnum::msgd_form_js->getPath(),
         ['inline' => true]
     );
 } catch (Throwable $exception) {

@@ -71,7 +71,7 @@ spl_autoload_register(static function (string $className): void {
     }
 });
 
-$isPluginEnabled = (bool)Configure::read(MsgdPluginConfigEnum::ENABLE->value);
+$isPluginEnabled = (bool)Configure::read(MsgdPluginConfigEnum::enable->value);
 
 if ($isPluginEnabled) {
     CakeEventManager::instance()->attach(
@@ -122,7 +122,7 @@ if ($isPluginEnabled) {
             }
 
             $rawWhitelist = Configure::read(
-                MsgdPluginConfigEnum::CONTROLLER_WHITELIST->value
+                MsgdPluginConfigEnum::controller_whitelist->value
             );
             $whitelistConfig = is_scalar($rawWhitelist) ? (string)$rawWhitelist : '';
 
@@ -148,7 +148,7 @@ if ($isPluginEnabled) {
 
             try {
                 $msgdInjectorHelper = $viewInstance->Helpers->load(
-                    MsgdPluginFileEnum::MSGD_INJECTOR_PHP->getPath()
+                    MsgdPluginFileEnum::msgd_injector_php->getPath()
                 );
 
                 if (!$msgdInjectorHelper instanceof MsgdInjectorHelper) {
