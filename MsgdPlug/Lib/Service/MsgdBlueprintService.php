@@ -309,9 +309,17 @@ class MsgdBlueprintService
                 return [];
             }
 
-            $ids = array_map('intval', array_values(array_unique($rawIds)));
+            $ids = [];
+            foreach ($rawIds as $rawId) {
+                if (is_numeric($rawId)) {
+                    $id = (int)$rawId;
+                    if ($id > 0) {
+                        $ids[] = $id;
+                    }
+                }
+            }
 
-            return array_values(array_filter($ids, static fn(int $id): bool => $id > 0));
+            return array_values(array_unique($ids));
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,

@@ -18,31 +18,29 @@ declare(strict_types=1);
 readonly final class MsgdBlueprintRulesDTO
 {
     /**
-     * @var array<string, mixed>
+     * Initializes DTO with already parsed and strict properties.
+     *
+     * @param array<string, mixed>   $raw
+     * @param array<int, int>        $sharingGroupsIds
+     * @param array<int, string>     $sharingGroupsUuids
+     * @param array<int, int|string> $allSharingGroupIdentifiers
      */
-    public array $raw;
+    public function __construct(
+        public array $raw = [],
+        public array $sharingGroupsIds = [],
+        public array $sharingGroupsUuids = [],
+        public array $allSharingGroupIdentifiers = []
+    ) {
+    }
 
     /**
-     * @var array<int, int>
-     */
-    public array $sharingGroupsIds;
-
-    /**
-     * @var array<int, string>
-     */
-    public array $sharingGroupsUuids;
-
-    /**
-     * @var array<int, int|string>
-     */
-    public array $allSharingGroupIdentifiers;
-
-    /**
+     * Creates a DTO instance from an array|json of rules.
+     *
      * @param string|array<string, mixed> $rules
      *
-     * @throws InvalidArgumentException
+     * @return self
      */
-    public function __construct(string|array $rules)
+    public static function fromArray(string|array $rules): self
     {
         if (is_string($rules)) {
             try {
@@ -63,7 +61,7 @@ readonly final class MsgdBlueprintRulesDTO
         }
 
         /** @var array<string, mixed> $parsed */
-        $this->raw = $parsed;
+        $raw = $parsed;
 
         $andConditions = $parsed['AND'] ?? [];
         $andConditions = is_array($andConditions) ? $andConditions : [];
@@ -76,17 +74,24 @@ readonly final class MsgdBlueprintRulesDTO
 
         $rawIds = is_array($ids) ? array_values($ids) : [$ids];
         /** @var array<int|string> $rawIds */
-        $this->sharingGroupsIds = self::cleanIds($rawIds);
+        $sharingGroupsIds = self::cleanIds($rawIds);
 
         $rawUuids = is_array($uuids) ? array_values($uuids) : [$uuids];
         /** @var array<string> $rawUuids */
-        $this->sharingGroupsUuids = self::cleanUuids($rawUuids);
+        $sharingGroupsUuids = self::cleanUuids($rawUuids);
 
-        $this->allSharingGroupIdentifiers = array_values(
+        $allSharingGroupIdentifiers = array_values(
             array_unique(
-                array_merge($this->sharingGroupsIds, $this->sharingGroupsUuids),
+                array_merge($sharingGroupsIds, $sharingGroupsUuids),
                 SORT_REGULAR
             )
+        );
+
+        return new self(
+            raw: $raw,
+            sharingGroupsIds: $sharingGroupsIds,
+            sharingGroupsUuids: $sharingGroupsUuids,
+            allSharingGroupIdentifiers: $allSharingGroupIdentifiers
         );
     }
 
@@ -143,7 +148,7 @@ readonly final class MsgdBlueprintRulesDTO
             $orConditions['sharing_group_uuid'] = count($uuids) === 1 ? $uuids[0] : $uuids;
         }
 
-        return new self(['AND' => ['OR' => $orConditions]]);
+        return self::fromArray(['AND' => ['OR' => $orConditions]]);
     }
 
     /**

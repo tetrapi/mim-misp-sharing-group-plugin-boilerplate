@@ -1,11 +1,11 @@
 # ⚙️ MsgdPlug - MISP Multi Sharing Group Distribution Plugin
 
-**MsgdPlug** is an plugin for **MISP (Malware Information Sharing Platform)** designed to bypass native single Sharing Group selection limits. It injects client-side controls and backend services into standard MISP views (`Add`, `Edit`, `View`, `Index`) allowing users to select multiple Sharing Groups simultaneously via dynamically evaluated **Sharing Group Blueprints**.
+**MsgdPlug** is a plugin for **MISP (Malware Information Sharing Platform)** designed to bypass native single Sharing Group selection limits. It injects client-side controls and backend services into standard MISP views (`Add`, `Edit`, `View`, `Index`) allowing users to select multiple Sharing Groups simultaneously via dynamically evaluated **Sharing Group Blueprints**.
 
-| Platform | Pipeline Status |
-| :--- | :--- |
-| **GitHub Actions** | [![GitHub CI](https://img.shields.io/badge/GitHub_CI-Workflow-blue?logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml) |
-| **GitLab CI** | [![GitLab CI](https://img.shields.io/badge/GitLab_CI-Pipelines-orange?logo=gitlab&style=flat-square)](https://git.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
+| Platform           | Pipeline Status                                                                                                                                                                                        |
+|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **GitHub Actions** | [![GitHub CI](https://img.shields.io/badge/GitHub_CI-Workflow-blue?logo=github&style=flat-square)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPOSITORY/actions/workflows/ci.yml)            |
+| **GitLab CI**      | [![GitLab CI](https://img.shields.io/badge/GitLab_CI-Pipelines-orange?logo=gitlab&style=flat-square)](https://git.tetrapi.pt/gp/mim/boilerplate/mim-misp-sharing-group-plugin-boilerplate/-/pipelines) |
 
 [![License](https://img.shields.io/badge/License-AGPL%203.0-blue?style=flat-square)](LICENSE)
 
@@ -64,7 +64,7 @@ Instead of altering MISP's core database tables, **MsgdPlug** bridges multi-grou
 
 ---
 
-### 2. View & Index Inspection Mode (`msgd_view.js` / `MsgdViewBase`)
+### 2. View & Index Inspection Mode (`View` / `Index` Pages)
 When navigating MISP interface in `View` or `Index` mode, `MsgdPlug` replaces or enhances native sharing group badges with dynamic inspection controls.
 
 ```text
@@ -122,9 +122,11 @@ MsgdPlug
 │   │   ├── MsgdApiControllerService.php
 │   │   ├── MsgdBlueprintService.php
 │   │   └── MsgdSharingGroupService.php
-│   └── Utility
-│       ├── MsgdLoggerUtility.php
-│       └── MsgdSanitizerUtility.php
+│   ├── Utility
+│   │   ├── MsgdLoggerUtility.php
+│   │   └── MsgdSanitizerUtility.php
+│   └── Voter
+│       └── MsgdBlueprintVoter.php
 ├── Test
 │   └── Case
 │       ├── Controller
@@ -146,9 +148,11 @@ MsgdPlug
 │           │   ├── MsgdApiControllerServiceTest.php
 │           │   ├── MsgdBlueprintServiceTest.php
 │           │   └── MsgdSharingGroupServiceTest.php
-│           └── Utility
-│              ├── MsgdLoggerUtilityTest.php
-│              └── MsgdSanitizerUtilityTest.php   
+│           ├── Utility
+│           │   ├── MsgdLoggerUtilityTest.php
+│           │   └── MsgdSanitizerUtilityTest.php
+│           └── Voter
+│               └── MsgdBlueprintVoterTest.php
 ├── View
 │   ├── Elements
 │   │   ├── Common
@@ -191,9 +195,10 @@ MsgdPlug
 * **`Utility/`**: Cross-cutting support tools.
   * **`MsgdLoggerUtility.php`**: Standardized system logging wrapper handling plugin exception traces.
   * **`MsgdSanitizerUtility.php`**: Input sanitization and XSS prevention functions for dynamic HTML components.
+* **`Voter/`**: Authorization layer encapsulating access control logic (`MsgdBlueprintVoter.php`) to validate user permissions before executing operations on blueprints or sharing groups.
 
 #### 📁 `Test/`
-* **`Case/`**: Full PHPUnit test suite mirroring the entire `Lib/` and `Controller/` tree for integration and unit testing.
+* **`Case/`**: Full PHPUnit test suite mirroring the entire `Lib/` (including DTOs, Services, Utilities, and Voters) and `Controller/` tree for integration and unit testing.
 
 #### 📁 `View/`
 * **`Elements/Common/`**:
@@ -220,13 +225,13 @@ MsgdPlug
 
 `MsgdPlug` registers native Server configurations in MISP (`app/Config/config.php` and `app/Model/Server.php`). These parameters are configurable via the MISP Server Settings administrative interface or directly inside the configuration array.
 
-| Configuration Key | Level | Type | Default | Description                                                                                             |
-| :--- | :---: | :---: |:-------:|:--------------------------------------------------------------------------------------------------------|
-| `Plugin.MsgdPlug_enabled` | 1 | Boolean | `true`  | Master toggle to enable or disable the plugin system-wide.                                              |
-| `Plugin.MsgdPlug_use_ids` | 2 | Boolean | `false` | Strategy for group rules (`true` = numeric `id`, `false` = `uuid`).                                     |
-| `Plugin.MsgdPlug_debug` | 2 | Boolean | `false` | Enables detailed log output via `MsgdLoggerUtility`.                                                    |
-| `Plugin.MsgdPlug_controller_whitelist` | 2 | String |  `'*'`  | List of MISP controllers to inject scripts into (`*` = all, `none` = disable, or comma-separated list). |
-| `Plugin.MsgdPlug_user_permissions_whitelist` | 0 | String | `none`  | Email allowlist for non-perm_sharing_group  users (`*` = all, `none` = disabled, or email list).        |
+| Configuration Key                            | Level |  Type   | Default | Description                                                                                             |
+|:---------------------------------------------|:-----:|:-------:|:-------:|:--------------------------------------------------------------------------------------------------------|
+| `Plugin.MsgdPlug_enabled`                    |   1   | Boolean | `true`  | Master toggle to enable or disable the plugin system-wide.                                              |
+| `Plugin.MsgdPlug_use_ids`                    |   2   | Boolean | `false` | Strategy for group rules (`true` = numeric `id`, `false` = `uuid`).                                     |
+| `Plugin.MsgdPlug_debug`                      |   2   | Boolean | `false` | Enables detailed log output via `MsgdLoggerUtility`.                                                    |
+| `Plugin.MsgdPlug_controller_whitelist`       |   2   | String  |  `'*'`  | List of MISP controllers to inject scripts into (`*` = all, `none` = disable, or comma-separated list). |
+| `Plugin.MsgdPlug_user_permissions_whitelist` |   0   | String  | `none`  | Email allowlist for non-perm_sharing_group  users (`*` = all, `none` = disabled, or email list).        |
 
 ### Parameter Details
 
@@ -382,7 +387,7 @@ chmod +x msgd_installer.sh
 sudo ./msgd_installer.sh
 ```
 
-**Non-Interactive / Direct Install:**
+**Non-Interactive / Direct Installation:**
 ```bash
 sudo ./msgd_installer.sh --auto
 ```
@@ -435,7 +440,7 @@ if (Configure::read('Plugin.MsgdPlug_enabled')) {
     'MsgdPlug_use_ids' => false,
     'MsgdPlug_debug'   => false,
     'MsgdPlug_controller_whitelist' => '*',
-    'MsgdPlug_user_permissions_whitelist' => '*',
+    'MsgdPlug_user_permissions_whitelist' => 'none',
 ```
 
 ### Step 4: Configure Access Control List (ACL)
@@ -493,7 +498,7 @@ const ACL_LIST = array(
     'MsgdPlug_user_permissions_whitelist' => array(
         'level' => 0,
         'description' => 'Allowlist of users without [perm_sharing_group] permission authorized to generate blueprints (* = all, none = nobody, or email list).',
-        'value' => '*',
+        'value' => 'none',
         'test' => 'testForEmpty',
         'type' => 'string',
         'null' => true,

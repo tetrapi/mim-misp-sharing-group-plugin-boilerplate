@@ -437,7 +437,7 @@
       this.loadGroupsRequest = groupsXhr;
 
       Promise.all([permissionPromise, groupsXhr])
-        .then(([_, response]) => {
+        .then(([, response]) => {
           this.loadGroupsRequest = null;
 
           if (response?.status === this.utils.statusTypes.SUCCESS) {

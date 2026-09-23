@@ -61,7 +61,7 @@ spl_autoload_register(static function (string $className): void {
         return;
     }
 
-    foreach (['DTO', 'Enum', 'Service', 'Utility'] as $directory) {
+    foreach (['DTO', 'Enum', 'Service', 'Utility', 'Voter'] as $directory) {
         $filePath = __DIR__ . '/../Lib/' . $directory . '/' . $className . '.php';
 
         if (file_exists($filePath)) {

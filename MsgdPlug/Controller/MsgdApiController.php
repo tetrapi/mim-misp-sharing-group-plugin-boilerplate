@@ -23,6 +23,7 @@ App::uses('MsgdPlugAppController', 'MsgdPlug.Controller');
 class MsgdApiController extends MsgdPlugAppController
 {
     private MsgdApiControllerService $msgdService;
+    private MsgdSharingGroupVoter $voter;
 
     /**
      * Initializes services and configures endpoint security rules.
@@ -32,7 +33,8 @@ class MsgdApiController extends MsgdPlugAppController
     public function beforeFilter(): void
     {
         parent::beforeFilter();
-        $this->msgdService = new MsgdApiControllerService();
+        $this->voter = new MsgdSharingGroupVoter();
+        $this->msgdService = new MsgdApiControllerService(voter: $this->voter);
     }
 
     /**
@@ -60,17 +62,13 @@ class MsgdApiController extends MsgdPlugAppController
             if ($user === null) {
                 return $this->buildJsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 401);
             }
-            $allowed = $this->msgdService->hasSharingGroupAccess($user, false);
+
+            $allowed = $this->voter->vote($user, MsgdSharingGroupVoter::USE_SHARING_GROUPS);
 
             return $this->buildJsonResponse([
                 'status' => 'success',
                 'allowed' => $allowed,
             ]);
-        } catch (ForbiddenException $exception) {
-            return $this->buildJsonResponse([
-                'status' => 'error',
-                'message' => $exception->getMessage(),
-            ], 403);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException($exception, '[MsgdApiController] checkUserPermission failed');
 

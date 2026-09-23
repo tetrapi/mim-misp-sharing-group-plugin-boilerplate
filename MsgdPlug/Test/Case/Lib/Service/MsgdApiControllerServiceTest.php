@@ -25,6 +25,7 @@ require_once dirname(__DIR__, 4) . '/Lib/Enum/MsgdPluginConfigEnum.php';
 require_once dirname(__DIR__, 4) . '/Lib/Service/MsgdSharingGroupService.php';
 require_once dirname(__DIR__, 4) . '/Lib/Service/MsgdBlueprintService.php';
 require_once dirname(__DIR__, 4) . '/Lib/Service/MsgdApiControllerService.php';
+require_once dirname(__DIR__, 4) . '/Lib/Voter/MsgdSharingGroupVoter.php';
 
 App::uses('DataSource', 'Model/Datasource');
 
@@ -108,34 +109,19 @@ final class MsgdApiControllerServiceTest extends TestCase
      *
      * @param MsgdSharingGroupService|null $sgLib
      * @param MsgdBlueprintService|null $bpLib
+     * @param MsgdSharingGroupVoter|null $voter
      *
      * @return MsgdApiControllerService
      */
     private function createService(
         ?MsgdSharingGroupService $sgLib = null,
-        ?MsgdBlueprintService $bpLib = null
+        ?MsgdBlueprintService $bpLib = null,
+        ?MsgdSharingGroupVoter $voter = null
     ): MsgdApiControllerService {
         return new MsgdApiControllerService(
             $sgLib ?? $this->createMock(MsgdSharingGroupService::class),
-            $bpLib ?? $this->createMock(MsgdBlueprintService::class)
-        );
-    }
-
-    /**
-     * Tests the configured user whitelist.
-     *
-     * @return void
-     */
-    public function testIsUserWhiteList(): void
-    {
-        Configure::write(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value,
-            'user@example.com'
-        );
-
-        $this->assertSame(
-            'user@example.com',
-            $this->createService()->getUserWhiteList()
+            $bpLib ?? $this->createMock(MsgdBlueprintService::class),
+            $voter ?? $this->createMock(MsgdSharingGroupVoter::class)
         );
     }
 
@@ -149,123 +135,6 @@ final class MsgdApiControllerServiceTest extends TestCase
         Configure::write(MsgdPluginConfigEnum::user_ids->value, true);
 
         $this->assertTrue($this->createService()->isUsingIds());
-    }
-
-    /**
-     * Tests access for an administrator.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessForSiteAdmin(): void
-    {
-        $this->assertTrue(
-            $this->createService()->hasSharingGroupAccess(
-                $this->createUser(true)
-            )
-        );
-    }
-
-    /**
-     * Tests access for a sharing group user.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessForSharingGroupUser(): void
-    {
-        $this->assertTrue(
-            $this->createService()->hasSharingGroupAccess(
-                $this->createUser()
-            )
-        );
-    }
-
-    /**
-     * Tests access through the whitelist.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessForWhitelistedUser(): void
-    {
-        $user = $this->createUser(false, false);
-
-        Configure::write(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value,
-            'allowed@example.com'
-        );
-
-        $user = new MsgdUserDTO(
-            id: $user->id,
-            orgId: $user->orgId,
-            email: 'allowed@example.com',
-            orgName: $user->orgName,
-            orgUuid: $user->orgUuid,
-            isSiteAdmin: false,
-            canUseSharingGroups: false,
-            canSync: false,
-            disabled: false
-        );
-
-        $this->assertTrue(
-            $this->createService()->hasSharingGroupAccess($user)
-        );
-    }
-
-    /**
-     * Tests wildcard whitelist access.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessForWildcardWhitelist(): void
-    {
-        $user = $this->createUser(false, false);
-
-        Configure::write(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value,
-            '*'
-        );
-
-        $this->assertTrue(
-            $this->createService()->hasSharingGroupAccess($user)
-        );
-    }
-
-    /**
-     * Tests denied access without exception.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessReturnsFalse(): void
-    {
-        Configure::write(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value,
-            ''
-        );
-
-        $this->assertFalse(
-            $this->createService()->hasSharingGroupAccess(
-                $this->createUser(false, false),
-                false
-            )
-        );
-    }
-
-    /**
-     * Tests denied access with exception.
-     *
-     * @return void
-     */
-    public function testHasSharingGroupAccessThrowsForbiddenException(): void
-    {
-        Configure::write(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value,
-            ''
-        );
-
-        $this->expectException(ForbiddenException::class);
-
-        $this->createService()->hasSharingGroupAccess(
-            $this->createUser(false, false)
-        );
     }
 
     /**
@@ -480,6 +349,7 @@ final class MsgdApiControllerServiceTest extends TestCase
     {
         $sgLib = $this->createMock(MsgdSharingGroupService::class);
         $bpLib = $this->createMock(MsgdBlueprintService::class);
+        $voter = $this->createMock(MsgdSharingGroupVoter::class);
         $dataSource = $this->createMock(DataSource::class);
 
         $group = $this->createSharingGroup(20);
@@ -494,6 +364,8 @@ final class MsgdApiControllerServiceTest extends TestCase
         $bpLib->method('create')->willReturn(5);
         $bpLib->method('execute')->willReturn(20);
 
+        $voter->method('vote')->willReturn(true);
+
         $dataSource->expects($this->once())->method('begin');
         $dataSource->expects($this->once())->method('commit');
 
@@ -502,7 +374,7 @@ final class MsgdApiControllerServiceTest extends TestCase
             customName: 'Test'
         );
 
-        $result = $this->createService($sgLib, $bpLib)
+        $result = $this->createService($sgLib, $bpLib, $voter)
             ->processMultiple($this->createUser(), $payload);
 
         $this->assertSame(20, $result->sharingGroupId);
@@ -519,6 +391,7 @@ final class MsgdApiControllerServiceTest extends TestCase
     {
         $sgLib = $this->createMock(MsgdSharingGroupService::class);
         $bpLib = $this->createMock(MsgdBlueprintService::class);
+        $voter = $this->createMock(MsgdSharingGroupVoter::class);
         $dataSource = $this->createMock(DataSource::class);
 
         $blueprint = $this->createBlueprint(20, [10]);
@@ -533,6 +406,8 @@ final class MsgdApiControllerServiceTest extends TestCase
         $bpLib->method('getDataSource')->willReturn($dataSource);
         $bpLib->method('execute')->willReturn(20);
 
+        $voter->method('vote')->willReturn(true);
+
         $dataSource->expects($this->once())->method('begin');
         $dataSource->expects($this->once())->method('commit');
 
@@ -541,7 +416,7 @@ final class MsgdApiControllerServiceTest extends TestCase
             customName: 'Test'
         );
 
-        $result = $this->createService($sgLib, $bpLib)
+        $result = $this->createService($sgLib, $bpLib, $voter)
             ->processMultiple($this->createUser(), $payload);
 
         $this->assertFalse($result->isNew);

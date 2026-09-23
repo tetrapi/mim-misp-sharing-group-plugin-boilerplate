@@ -24,6 +24,7 @@ require_once dirname(__DIR__, 3) . '/Lib/DTO/MsgdProcessGroupsDTO.php';
 require_once dirname(__DIR__, 3) . '/Lib/DTO/MsgdProcessResultDTO.php';
 require_once dirname(__DIR__, 3) . '/Lib/DTO/MsgdSharingGroupDTO.php';
 require_once dirname(__DIR__, 3) . '/Lib/Enum/MsgdPluginConfigEnum.php';
+require_once dirname(__DIR__, 3) . '/Lib/Voter/MsgdSharingGroupVoter.php';
 require_once dirname(__DIR__, 3) . '/Lib/Service/MsgdSharingGroupService.php';
 require_once dirname(__DIR__, 3) . '/Lib/Service/MsgdApiControllerService.php';
 require_once dirname(__DIR__, 3) . '/Controller/MsgdPlugAppController.php';
@@ -55,6 +56,7 @@ final class MsgdApiControllerTest extends TestCase
      * Creates a partially mocked MsgdApiController instance.
      *
      * @param MockObject $serviceMock Controller service mock.
+     * @param MockObject|null $voterMock Voter mock.
      * @param string $method HTTP request method.
      * @param bool $isRequestValid Mock result for request validation.
      * @param bool $useIds Mock result for identifier mode.
@@ -63,6 +65,7 @@ final class MsgdApiControllerTest extends TestCase
      */
     private function createController(
         MockObject $serviceMock,
+        ?MockObject $voterMock = null,
         string $method = 'GET',
         bool $isRequestValid = true,
         bool $useIds = false
@@ -105,9 +108,14 @@ final class MsgdApiControllerTest extends TestCase
         $isUsingIdsMocker->willReturn($useIds);
 
         $reflection = new ReflectionClass(MsgdApiController::class);
-        $property = $reflection->getProperty('msgdService');
-        $property->setAccessible(true);
-        $property->setValue($controller, $serviceMock);
+
+        $serviceProperty = $reflection->getProperty('msgdService');
+        $serviceProperty->setAccessible(true);
+        $serviceProperty->setValue($controller, $serviceMock);
+
+        $voterProperty = $reflection->getProperty('voter');
+        $voterProperty->setAccessible(true);
+        $voterProperty->setValue($controller, $voterMock ?? $this->createVoterMock());
 
         return $controller;
     }
@@ -121,6 +129,24 @@ final class MsgdApiControllerTest extends TestCase
     {
         /** @var MockBuilder<MsgdApiControllerService> $builder */
         $builder = $this->getMockBuilder(MsgdApiControllerService::class);
+
+        /** @var MockObject $mock */
+        $mock = $builder
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        return $mock;
+    }
+
+    /**
+     * Creates a voter mock.
+     *
+     * @return MockObject
+     */
+    private function createVoterMock(): MockObject
+    {
+        /** @var MockBuilder<MsgdSharingGroupVoter> $builder */
+        $builder = $this->getMockBuilder(MsgdSharingGroupVoter::class);
 
         /** @var MockObject $mock */
         $mock = $builder
@@ -182,7 +208,7 @@ final class MsgdApiControllerTest extends TestCase
     public function testCheckUserPermissionReturns403WhenUnauthorized(): void
     {
         $serviceMock = $this->createServiceMock();
-        $controller = $this->createController($serviceMock, 'GET', false);
+        $controller = $this->createController($serviceMock, null, 'GET', false);
 
         $response = $controller->checkUserPermission();
 
@@ -194,21 +220,25 @@ final class MsgdApiControllerTest extends TestCase
     }
 
     /**
-     * Tests successful permission verification.
+     * Tests successful permission verification (granted).
      *
      * @return void
      */
-    public function testCheckUserPermissionReturns200(): void
+    public function testCheckUserPermissionReturns200WhenGranted(): void
     {
         $serviceMock = $this->createServiceMock();
+        $voterMock = $this->createVoterMock();
 
         /** @var InvocationMocker $expectation */
-        $expectation = $serviceMock->expects($this->once());
-        $expectation->method('hasSharingGroupAccess')
-            ->with($this->isInstanceOf(MsgdUserDTO::class), false)
+        $expectation = $voterMock->expects($this->once());
+        $expectation->method('vote')
+            ->with(
+                $this->isInstanceOf(MsgdUserDTO::class),
+                MsgdSharingGroupVoter::USE_SHARING_GROUPS
+            )
             ->willReturn(true);
 
-        $controller = $this->createController($serviceMock);
+        $controller = $this->createController($serviceMock, $voterMock);
 
         $response = $controller->checkUserPermission();
 
@@ -221,29 +251,34 @@ final class MsgdApiControllerTest extends TestCase
     }
 
     /**
-     * Tests forbidden permission verification.
+     * Tests permission verification when access is not granted.
      *
      * @return void
      */
-    public function testCheckUserPermissionReturns403OnForbiddenException(): void
+    public function testCheckUserPermissionReturns200WhenDenied(): void
     {
         $serviceMock = $this->createServiceMock();
+        $voterMock = $this->createVoterMock();
 
         /** @var InvocationMocker $expectation */
-        $expectation = $serviceMock->expects($this->once());
-        $expectation->method('hasSharingGroupAccess')
-            ->with($this->isInstanceOf(MsgdUserDTO::class), false)
-            ->willThrowException(new ForbiddenException('Access denied.'));
+        $expectation = $voterMock->expects($this->once());
+        $expectation->method('vote')
+            ->with(
+                $this->isInstanceOf(MsgdUserDTO::class),
+                MsgdSharingGroupVoter::USE_SHARING_GROUPS
+            )
+            ->willReturn(false);
 
-        $controller = $this->createController($serviceMock);
+        $controller = $this->createController($serviceMock, $voterMock);
 
         $response = $controller->checkUserPermission();
 
-        $this->assertSame(403, $response->statusCode());
-        $this->assertSame(
-            'Access denied.',
-            $this->decodeResponse($response)['message']
-        );
+        $this->assertSame(200, $response->statusCode());
+
+        $payload = $this->decodeResponse($response);
+
+        $this->assertSame('success', $payload['status']);
+        $this->assertFalse($payload['allowed']);
     }
 
     /**
@@ -254,14 +289,18 @@ final class MsgdApiControllerTest extends TestCase
     public function testCheckUserPermissionReturns500OnThrowable(): void
     {
         $serviceMock = $this->createServiceMock();
+        $voterMock = $this->createVoterMock();
 
         /** @var InvocationMocker $expectation */
-        $expectation = $serviceMock->expects($this->once());
-        $expectation->method('hasSharingGroupAccess')
-            ->with($this->isInstanceOf(MsgdUserDTO::class), false)
-            ->willThrowException(new RuntimeException('Service failure.'));
+        $expectation = $voterMock->expects($this->once());
+        $expectation->method('vote')
+            ->with(
+                $this->isInstanceOf(MsgdUserDTO::class),
+                MsgdSharingGroupVoter::USE_SHARING_GROUPS
+            )
+            ->willThrowException(new RuntimeException('Voter failure.'));
 
-        $controller = $this->createController($serviceMock);
+        $controller = $this->createController($serviceMock, $voterMock);
 
         $response = $controller->checkUserPermission();
 
@@ -370,7 +409,7 @@ final class MsgdApiControllerTest extends TestCase
     public function testGetSharingGroupsReturns403WhenUnauthorized(): void
     {
         $serviceMock = $this->createServiceMock();
-        $controller = $this->createController($serviceMock, 'GET', false);
+        $controller = $this->createController($serviceMock, null, 'GET', false);
 
         $response = $controller->getSharingGroups();
 
@@ -480,6 +519,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST',
             true,
             $useIds
@@ -515,6 +555,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -544,6 +585,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -573,6 +615,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST',
             true,
             true
@@ -613,6 +656,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -647,6 +691,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -676,6 +721,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST',
             false
         );
@@ -700,6 +746,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -745,6 +792,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST',
             true,
             $useIds
@@ -763,6 +811,54 @@ final class MsgdApiControllerTest extends TestCase
             'Target sharing group could not be found.',
             $this->decodeResponse($response)['message']
         );
+    }
+
+    /**
+     * Tests successful processing of multiple groups.
+     *
+     * @return void
+     */
+    public function testProcessGroupsMultipleReturns200(): void
+    {
+        $serviceMock = $this->createServiceMock();
+        $result = new MsgdProcessResultDTO(
+            isNew: true,
+            hasBlueprint: true,
+            sharingGroupId: 10,
+            sharingGroupName: 'Test Group'
+        );
+
+        /** @var InvocationMocker $expectation */
+        $expectation = $serviceMock->expects($this->once());
+        $expectation->method('processMultiple')
+            ->with(
+                $this->isInstanceOf(MsgdUserDTO::class),
+                $this->isInstanceOf(MsgdProcessGroupsDTO::class)
+            )
+            ->willReturn($result);
+
+        $controller = $this->createController(
+            $serviceMock,
+            null,
+            'POST',
+            true,
+            false
+        );
+
+        $controller->request->data = [
+            'MsgdPlug' => [
+                'groups' => [self::UUID_1, self::UUID_2],
+            ],
+        ];
+
+        $response = $controller->processGroups();
+
+        $this->assertSame(200, $response->statusCode());
+
+        $payload = $this->decodeResponse($response);
+
+        $this->assertSame('success', $payload['status']);
+        $this->assertIsArray($payload['group']);
     }
 
     /**
@@ -785,6 +881,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 
@@ -819,6 +916,7 @@ final class MsgdApiControllerTest extends TestCase
 
         $controller = $this->createController(
             $serviceMock,
+            null,
             'POST'
         );
 

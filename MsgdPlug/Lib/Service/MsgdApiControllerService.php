@@ -28,31 +28,25 @@ class MsgdApiControllerService
     private MsgdBlueprintService $bpLib;
 
     /**
+     * @var MsgdSharingGroupVoter
+     */
+    private MsgdSharingGroupVoter $voter;
+
+    /**
      * Initializes service dependencies.
      *
      * @param MsgdSharingGroupService|null $sgLib
      * @param MsgdBlueprintService|null $bpLib
+     * @param MsgdSharingGroupVoter|null $voter
      */
     public function __construct(
         ?MsgdSharingGroupService $sgLib = null,
-        ?MsgdBlueprintService $bpLib = null
+        ?MsgdBlueprintService $bpLib = null,
+        ?MsgdSharingGroupVoter $voter = null
     ) {
         $this->sgLib = $sgLib ?? new MsgdSharingGroupService();
         $this->bpLib = $bpLib ?? new MsgdBlueprintService();
-    }
-
-    /**
-     * Returns whether the plugin user white list is configured.
-     *
-     * @return string
-     */
-    public function getUserWhiteList(): string
-    {
-        $rawWhitelist = Configure::read(
-            MsgdPluginConfigEnum::user_permissions_whitelist->value
-        );
-
-        return is_scalar($rawWhitelist) ? (string) $rawWhitelist : '';
+        $this->voter = $voter ?? new MsgdSharingGroupVoter();
     }
 
     /**
@@ -63,46 +57,6 @@ class MsgdApiControllerService
     public function isUsingIds(): bool
     {
         return (bool)Configure::read(MsgdPluginConfigEnum::user_ids->value);
-    }
-
-    /**
-     * Checks if the current user has permission to use Sharing Group Blueprints.
-     *
-     * @param MsgdUserDTO $user
-     * @param bool $exception
-     *
-     * @return bool
-     *
-     * @throws ForbiddenException
-     */
-    public function hasSharingGroupAccess(MsgdUserDTO $user, bool $exception = true): bool
-    {
-        if ($user->isSiteAdmin || $user->canUseSharingGroups) {
-            return true;
-        }
-
-        $userEmail = strtolower(trim($user->email));
-        $whitelistConfig = $this->getUserWhiteList();
-
-        if ($whitelistConfig !== '') {
-            $allowedList = array_filter(
-                array_map(
-                    static fn(string $value): string => strtolower(trim($value)),
-                    explode(',', $whitelistConfig)
-                ),
-                static fn(string $item): bool => $item !== ''
-            );
-
-            if (in_array('*', $allowedList, true) || ($userEmail !== '' && in_array($userEmail, $allowedList, true))) {
-                return true;
-            }
-        }
-
-        if ($exception) {
-            throw new ForbiddenException('You do not have permission to use this functionality.');
-        }
-
-        return false;
     }
 
     /**
@@ -247,7 +201,6 @@ class MsgdApiControllerService
         MsgdUserDTO $user,
         MsgdProcessGroupsDTO $payload
     ): MsgdProcessResultDTO {
-        $hasPermission = $this->hasSharingGroupAccess($user, false);
         $mirrors = $this->sgLib->getMirrorGroups($user, $payload->groups);
         $matchedExistingBlueprint = $mirrors !== null
             ? $this->bpLib->findBySharingGroupRules($user, $mirrors)
@@ -255,6 +208,7 @@ class MsgdApiControllerService
 
         $isNew = true;
         $associatedSharingGroupId = 0;
+        $executedSharingGroupId = null;
 
         $databaseTransaction = $this->bpLib->getDataSource();
 
@@ -267,23 +221,25 @@ class MsgdApiControllerService
                 $associatedSharingGroupRecord = $this->sgLib->findById($user, $associatedSharingGroupId);
 
                 if (!$associatedSharingGroupRecord instanceof MsgdSharingGroupDTO) {
-                    if (!$hasPermission) {
-                        throw new ForbiddenException('You do not have permission to use this functionality.');
-                    }
+                    $this->voter->denyAccessUnlessGranted(
+                        $user,
+                        MsgdSharingGroupVoter::USE_SHARING_GROUPS
+                    );
 
                     $this->bpLib->resetSharingGroupRef($user, $matchedExistingBlueprint, $payload->customName);
                 } else {
                     $isNew = false;
                 }
             } else {
-                if (!$hasPermission) {
-                    throw new ForbiddenException('You do not have permission to use this functionality.');
-                }
+                $this->voter->denyAccessUnlessGranted(
+                    $user,
+                    MsgdSharingGroupVoter::USE_SHARING_GROUPS
+                );
 
                 $targetBlueprintId = $this->bpLib->create($user, $payload);
             }
 
-            if ($hasPermission) {
+            if ($this->voter->vote($user, MsgdSharingGroupVoter::USE_SHARING_GROUPS)) {
                 $executedSharingGroupId = $this->bpLib->execute($targetBlueprintId);
             }
 

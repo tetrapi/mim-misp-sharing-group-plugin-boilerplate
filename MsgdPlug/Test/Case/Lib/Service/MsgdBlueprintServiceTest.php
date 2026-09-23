@@ -71,15 +71,19 @@ final class MsgdBlueprintServiceTest extends TestCase
         int $sharingGroupId,
         array $identifiers = []
     ): MsgdBlueprintDTO {
-        return new MsgdBlueprintDTO(
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
-            id: $id,
-            uuid: self::UUID_1,
-            name: 'Test Blueprint',
-            userId: 1,
-            orgId: 10,
-            sharingGroupId: $sharingGroupId
-        );
+        $model = [
+            'SharingGroupBlueprint' => [
+                'id' => $id,
+                'uuid' => self::UUID_1,
+                'name' => 'Test Blueprint',
+                'user_id' => 1,
+                'org_id' => 10,
+                'sharing_group_id' => $sharingGroupId,
+                'rules' => MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
+            ],
+        ];
+
+        return MsgdBlueprintDTO::fromArray($model);
     }
 
     /**
@@ -196,17 +200,15 @@ final class MsgdBlueprintServiceTest extends TestCase
      * Tests generated sharing groups.
      *
      * @return void
-     *
-     * @throws JsonException
      */
     public function testGetGeneratedGroups(): void
     {
         $model = $this->createMock(SharingGroupBlueprint::class);
 
         $model->method('find')->willReturn([
-            $this->createBlueprint(1, 10)->toModelArray(),
-            $this->createBlueprint(2, 20)->toModelArray(),
-            $this->createBlueprint(3, 10)->toModelArray(),
+            '1' => '10',
+            '2' => '20',
+            '3' => '10',
         ]);
 
         $result = (new MsgdBlueprintService($model))

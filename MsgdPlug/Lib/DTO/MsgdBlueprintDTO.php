@@ -76,7 +76,7 @@ class MsgdBlueprintDTO
         $rules = $rawRules;
 
         return new self(
-            rules: new MsgdBlueprintRulesDTO($rules),
+            rules: MsgdBlueprintRulesDTO::fromArray($rules),
             id: $id,
             uuid: $uuid,
             name: $name,
