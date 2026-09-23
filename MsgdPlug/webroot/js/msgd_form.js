@@ -419,22 +419,25 @@
 
       $container.html(this.utils.getTemplate(TEMPLATES.FEEDBACK_LOADING));
 
-      if (permissionUrl) {
-        $.get(permissionUrl)
-          .done((response) => {
-            this.hasBlueprintPermission =
-              response?.status === this.utils.statusTypes.SUCCESS &&
-              response?.allowed === true;
-          })
-          .fail(() => {
+      const permissionPromise = permissionUrl
+        ? $.get(permissionUrl)
+            .then((response) => {
+              this.hasBlueprintPermission =
+                response?.status === this.utils.statusTypes.SUCCESS &&
+                response?.allowed === true;
+            })
+            .catch(() => {
+              this.hasBlueprintPermission = false;
+            })
+        : Promise.resolve().then(() => {
             this.hasBlueprintPermission = false;
           });
-      } else {
-        this.hasBlueprintPermission = false;
-      }
 
-      this.loadGroupsRequest = $.get(targetUrl, { all })
-        .done((response) => {
+      const groupsXhr = $.get(targetUrl, { all });
+      this.loadGroupsRequest = groupsXhr;
+
+      Promise.all([permissionPromise, groupsXhr])
+        .then(([_, response]) => {
           this.loadGroupsRequest = null;
 
           if (response?.status === this.utils.statusTypes.SUCCESS) {
@@ -449,7 +452,7 @@
             }),
           );
         })
-        .fail((error) => {
+        .catch((error) => {
           if (error?.statusText === "abort") {
             return;
           }
