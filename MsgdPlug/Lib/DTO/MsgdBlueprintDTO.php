@@ -17,6 +17,15 @@ declare(strict_types=1);
  */
 class MsgdBlueprintDTO
 {
+    /**
+     * @param MsgdBlueprintRulesDTO $rules
+     * @param int $id
+     * @param string $uuid
+     * @param string $name
+     * @param int $userId
+     * @param int $orgId
+     * @param int $sharingGroupId
+     */
     public function __construct(
         public readonly MsgdBlueprintRulesDTO $rules,
         public readonly int $id = 0,

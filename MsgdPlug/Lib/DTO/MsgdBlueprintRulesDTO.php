@@ -20,9 +20,9 @@ readonly final class MsgdBlueprintRulesDTO
     /**
      * Initializes DTO with already parsed and strict properties.
      *
-     * @param array<string, mixed>   $raw
-     * @param array<int, int>        $sharingGroupsIds
-     * @param array<int, string>     $sharingGroupsUuids
+     * @param array<string, mixed> $raw
+     * @param array<int, int> $sharingGroupsIds
+     * @param array<int, string> $sharingGroupsUuids
      * @param array<int, int|string> $allSharingGroupIdentifiers
      */
     public function __construct(
