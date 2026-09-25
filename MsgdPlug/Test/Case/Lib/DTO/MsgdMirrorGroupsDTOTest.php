@@ -61,9 +61,9 @@ final class MsgdMirrorGroupsDTOTest extends TestCase
      */
     public function testFromArray(): void
     {
-        $dto = MsgdMirrorGroupsDTO::fromArray(
-            [self::UUID_1, self::UUID_2, self::UUID_1],
-            [10, 20, 10]
+        $dto = new MsgdMirrorGroupsDTO(
+            [10, 20, 10],
+            [self::UUID_1, self::UUID_2, self::UUID_1]
         );
 
         $this->assertSame([10, 20], $dto->ids);
@@ -77,7 +77,7 @@ final class MsgdMirrorGroupsDTOTest extends TestCase
      */
     public function testFromArrayAcceptsEmptyArrays(): void
     {
-        $dto = MsgdMirrorGroupsDTO::fromArray([], []);
+        $dto = new MsgdMirrorGroupsDTO([], []);
 
         $this->assertSame([], $dto->ids);
         $this->assertSame([], $dto->uuids);
@@ -90,9 +90,9 @@ final class MsgdMirrorGroupsDTOTest extends TestCase
      */
     public function testFromArrayPreservesOrder(): void
     {
-        $dto = MsgdMirrorGroupsDTO::fromArray(
-            [self::UUID_2, self::UUID_1, self::UUID_2],
-            [20, 10, 20]
+        $dto = new MsgdMirrorGroupsDTO(
+            [20, 10, 20],
+            [self::UUID_2, self::UUID_1, self::UUID_2]
         );
 
         $this->assertSame([20, 10], $dto->ids);

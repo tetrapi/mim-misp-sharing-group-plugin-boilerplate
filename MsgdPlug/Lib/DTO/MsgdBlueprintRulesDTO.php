@@ -18,81 +18,82 @@ declare(strict_types=1);
 readonly final class MsgdBlueprintRulesDTO
 {
     /**
-     * Initializes DTO with already parsed and strict properties.
-     *
-     * @param array<string, mixed> $raw
-     * @param array<int, int> $sharingGroupsIds
-     * @param array<int, string> $sharingGroupsUuids
-     * @param array<int, int|string> $allSharingGroupIdentifiers
+     * @var array<string, mixed>
      */
-    public function __construct(
-        public array $raw = [],
-        public array $sharingGroupsIds = [],
-        public array $sharingGroupsUuids = [],
-        public array $allSharingGroupIdentifiers = []
-    ) {
-    }
+    public array $raw;
 
     /**
-     * Creates a DTO instance from an array|json of rules.
+     * @var array<int, int>
+     */
+    public array $sharingGroupsIds;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $sharingGroupsUuids;
+
+    /**
+     * @var array<int, int|string>
+     */
+    public array $allSharingGroupIdentifiers;
+
+    /**
+     * Initializes DTO from an array or JSON string of rules.
      *
      * @param string|array<string, mixed> $rules
-     *
-     * @return self
      */
-    public static function fromArray(string|array $rules): self
+    public function __construct(string|array $rules = [])
     {
+        /** @var array<string, mixed> $parsed */
+        $parsed = [];
+
         if (is_string($rules)) {
             try {
-                $parsed = json_decode($rules, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $exception) {
-                throw new InvalidArgumentException(
-                    sprintf('Blueprint rules contain invalid JSON: %s', $exception->getMessage()),
-                    0,
-                    $exception
-                );
+                $decoded = json_decode($rules, true);
+                if (is_array($decoded)) {
+                    /** @var array<string, mixed> $decoded */
+                    $parsed = $decoded;
+                }
+            } catch (Throwable) {
+                $parsed = [];
             }
         } else {
+            /** @var array<string, mixed> $parsed */
             $parsed = $rules;
         }
 
-        if (!is_array($parsed)) {
-            throw new InvalidArgumentException('Blueprint rules must be a valid JSON object.');
-        }
-
-        /** @var array<string, mixed> $parsed */
-        $raw = $parsed;
-
-        $andConditions = $parsed['AND'] ?? [];
-        $andConditions = is_array($andConditions) ? $andConditions : [];
-
-        $orConditions = $andConditions['OR'] ?? [];
-        $orConditions = is_array($orConditions) ? $orConditions : [];
+        $andConditions = isset($parsed['AND']) && is_array($parsed['AND']) ? $parsed['AND'] : [];
+        $orConditions = isset($andConditions['OR']) && is_array($andConditions['OR']) ? $andConditions['OR'] : [];
 
         $ids = $orConditions['sharing_group_id'] ?? [];
         $uuids = $orConditions['sharing_group_uuid'] ?? [];
 
-        $rawIds = is_array($ids) ? array_values($ids) : [$ids];
-        /** @var array<int|string> $rawIds */
-        $sharingGroupsIds = self::cleanIds($rawIds);
+        $rawIds = is_array($ids) ? array_values($ids) : (is_scalar($ids) ? [$ids] : []);
+        $rawUuids = is_array($uuids) ? array_values($uuids) : (is_scalar($uuids) ? [$uuids] : []);
 
-        $rawUuids = is_array($uuids) ? array_values($uuids) : [$uuids];
-        /** @var array<string> $rawUuids */
-        $sharingGroupsUuids = self::cleanUuids($rawUuids);
+        try {
+            /** @var array<int|string> $rawIds */
+            $sharingGroupsIds = self::cleanIds($rawIds);
 
-        $allSharingGroupIdentifiers = array_values(
-            array_unique(
-                array_merge($sharingGroupsIds, $sharingGroupsUuids),
-                SORT_REGULAR
-            )
-        );
+            /** @var array<string> $rawUuids */
+            $sharingGroupsUuids = self::cleanUuids($rawUuids);
 
-        return new self(
-            raw: $raw,
-            sharingGroupsIds: $sharingGroupsIds,
-            sharingGroupsUuids: $sharingGroupsUuids,
-            allSharingGroupIdentifiers: $allSharingGroupIdentifiers
-        );
+            $allSharingGroupIdentifiers = array_values(
+                array_unique(
+                    array_merge($sharingGroupsIds, $sharingGroupsUuids),
+                    SORT_REGULAR
+                )
+            );
+        } catch (Throwable) {
+            $sharingGroupsIds = [];
+            $sharingGroupsUuids = [];
+            $allSharingGroupIdentifiers = [];
+        }
+
+        $this->raw = $parsed;
+        $this->sharingGroupsIds = $sharingGroupsIds;
+        $this->sharingGroupsUuids = $sharingGroupsUuids;
+        $this->allSharingGroupIdentifiers = $allSharingGroupIdentifiers;
     }
 
     /**
@@ -100,11 +101,11 @@ readonly final class MsgdBlueprintRulesDTO
      *
      * @param array<int|string> $identifiers
      *
-     * @return self
+     * @return MsgdBlueprintRulesDTO
      *
      * @throws InvalidArgumentException
      */
-    public static function fromIdentifiers(array $identifiers): self
+    public static function generateFromIdentifiers(array $identifiers): MsgdBlueprintRulesDTO
     {
         $ids = [];
         $uuids = [];
@@ -148,29 +149,7 @@ readonly final class MsgdBlueprintRulesDTO
             $orConditions['sharing_group_uuid'] = count($uuids) === 1 ? $uuids[0] : $uuids;
         }
 
-        return self::fromArray(['AND' => ['OR' => $orConditions]]);
-    }
-
-    /**
-     * Returns the raw MISP rules array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return $this->raw;
-    }
-
-    /**
-     * Returns rules as JSON for the MISP model.
-     *
-     * @return string
-     *
-     * @throws JsonException
-     */
-    public function toJson(): string
-    {
-        return json_encode($this->raw, JSON_THROW_ON_ERROR);
+        return new self(['AND' => ['OR' => $orConditions]]);
     }
 
     /**

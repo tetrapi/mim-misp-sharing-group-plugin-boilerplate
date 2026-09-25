@@ -18,28 +18,26 @@ declare(strict_types=1);
 readonly final class MsgdMirrorGroupsDTO
 {
     /**
-     * @param array<int, int> $ids
-     * @param array<int, string> $uuids
+     * @var array<int, int>
      */
-    public function __construct(
-        public array $ids = [],
-        public array $uuids = []
-    ) {
-    }
+    public array $ids;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $uuids;
 
     /**
      * Creates a DTO from resolved Sharing Group identifiers.
      *
-     * @param list<string> $resultUuids
-     * @param list<int> $resultIds
-     *
-     * @return self
+     * @param array<int, int> $ids
+     * @param array<int, string> $uuids
      */
-    public static function fromArray(array $resultUuids, array $resultIds): self
-    {
-        return new self(
-            ids: array_values(array_unique($resultIds)),
-            uuids: array_values(array_unique($resultUuids))
-        );
+    public function __construct(
+        array $ids = [],
+        array $uuids = []
+    ) {
+        $this->ids = array_values(array_unique($ids));
+        $this->uuids = array_values(array_unique($uuids));
     }
 }

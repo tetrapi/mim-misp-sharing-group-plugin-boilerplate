@@ -29,7 +29,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
      */
     public function testFromRequestQuerySuccess(): void
     {
-        $dto = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetBlueprintRulesGroupsDTO([
             'group' => 42,
         ]);
 
@@ -43,7 +43,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
      */
     public function testFromRequestQuerySuccessWithMsgdPlugWrapper(): void
     {
-        $dto = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetBlueprintRulesGroupsDTO([
             'MsgdPlug' => [
                 'group' => '15',
             ],
@@ -59,7 +59,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryIgnoresFrameworkParameters(): void
     {
-        $dto = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetBlueprintRulesGroupsDTO([
             'group' => 10,
             'url' => 'msgd_plug/api/rules',
             '_' => '123',
@@ -75,7 +75,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryIgnoresFrameworkParametersInsideWrapper(): void
     {
-        $dto = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetBlueprintRulesGroupsDTO([
             'MsgdPlug' => [
                 'group' => 10,
                 'url' => 'msgd_plug/api/rules',
@@ -98,7 +98,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
             'Query parameter "group" is required and cannot be empty.'
         );
 
-        MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([]);
+        new MsgdGetBlueprintRulesGroupsDTO([]);
     }
 
     /**
@@ -110,7 +110,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        new MsgdGetBlueprintRulesGroupsDTO([
             'group' => '',
         ]);
     }
@@ -128,7 +128,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        new MsgdGetBlueprintRulesGroupsDTO([
             'group' => $group,
         ]);
     }
@@ -165,7 +165,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
             'Unauthorized parameters detected in query: [invalid_param].'
         );
 
-        MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        new MsgdGetBlueprintRulesGroupsDTO([
             'group' => 10,
             'invalid_param' => 'value',
         ]);
@@ -183,7 +183,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
             'Unauthorized parameters detected in query: [MsgdPlug].'
         );
 
-        MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery([
+        new MsgdGetBlueprintRulesGroupsDTO([
             'MsgdPlug' => 'invalid',
             'group' => 10,
         ]);
@@ -196,7 +196,7 @@ final class MsgdGetBlueprintRulesGroupsDTOTest extends TestCase
      */
     public function testDirectConstructorInstantiation(): void
     {
-        $dto = new MsgdGetBlueprintRulesGroupsDTO(88);
+        $dto = new MsgdGetBlueprintRulesGroupsDTO(['MsgdPlug' => ['group' => 88]]);
 
         $this->assertSame(88, $dto->group);
     }

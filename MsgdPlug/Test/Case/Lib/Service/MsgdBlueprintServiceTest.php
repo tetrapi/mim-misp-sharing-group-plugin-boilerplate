@@ -41,7 +41,7 @@ final class MsgdBlueprintServiceTest extends TestCase
      */
     private function createUser(): MsgdUserDTO
     {
-        return MsgdUserDTO::fromArray([
+        return new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'email' => 'user@example.com',
@@ -79,11 +79,11 @@ final class MsgdBlueprintServiceTest extends TestCase
                 'user_id' => 1,
                 'org_id' => 10,
                 'sharing_group_id' => $sharingGroupId,
-                'rules' => MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
+                'rules' => MsgdBlueprintRulesDTO::generateFromIdentifiers($identifiers),
             ],
         ];
 
-        return MsgdBlueprintDTO::fromArray($model);
+        return new MsgdBlueprintDTO($model);
     }
 
     /**
@@ -259,8 +259,7 @@ final class MsgdBlueprintServiceTest extends TestCase
             });
 
         $payload = new MsgdProcessGroupsDTO(
-            groups: [10, self::UUID_2],
-            customName: 'Custom Name'
+            ['MsgdPlug' => ['groups' => [self::UUID_2], 'customName' => 'Custom Name']]
         );
 
         $result = (new MsgdBlueprintService($model))

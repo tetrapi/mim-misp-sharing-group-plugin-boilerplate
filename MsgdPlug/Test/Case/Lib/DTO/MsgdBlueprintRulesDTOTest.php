@@ -33,7 +33,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testConstructorExtractsIds(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromArray([
+        $dto = new MsgdBlueprintRulesDTO([
             'AND' => [
                 'OR' => [
                     'sharing_group_id' => [10, '20', 10],
@@ -53,7 +53,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testConstructorExtractsUuids(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromArray([
+        $dto = new MsgdBlueprintRulesDTO([
             'AND' => [
                 'OR' => [
                     'sharing_group_uuid' => [
@@ -83,7 +83,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testConstructorAcceptsScalarIdentifiers(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromArray([
+        $dto = new MsgdBlueprintRulesDTO([
             'AND' => [
                 'OR' => [
                     'sharing_group_id' => 10,
@@ -113,23 +113,10 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
             ],
         ], JSON_THROW_ON_ERROR);
 
-        $dto = MsgdBlueprintRulesDTO::fromArray($json);
+        $dto = new MsgdBlueprintRulesDTO($json);
 
         $this->assertSame([10, 20], $dto->sharingGroupsIds);
-        $this->assertSame($json, $dto->toJson());
-    }
-
-    /**
-     * Tests exception for invalid JSON.
-     *
-     * @return void
-     */
-    public function testConstructorThrowsExceptionForInvalidJson(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Blueprint rules contain invalid JSON:');
-
-        MsgdBlueprintRulesDTO::fromArray('{invalid-json');
+        $this->assertSame($json, json_encode($dto->raw));
     }
 
     /**
@@ -149,7 +136,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
 
         $dto = new MsgdBlueprintRulesDTO($rules);
 
-        $this->assertSame($rules, $dto->toArray());
+        $this->assertSame($rules, $dto->raw);
     }
 
     /**
@@ -159,7 +146,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testFromIdentifiers(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromIdentifiers([
+        $rules = MsgdBlueprintRulesDTO::generateFromIdentifiers([
             10,
             '20',
             self::UUID_1,
@@ -170,8 +157,8 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
             self::UUID_1,
         ]);
 
-        $this->assertSame([10, 20], $dto->sharingGroupsIds);
-        $this->assertSame([self::UUID_1], $dto->sharingGroupsUuids);
+        $this->assertSame([10, 20], $rules->sharingGroupsIds);
+        $this->assertSame([self::UUID_1], $rules->sharingGroupsUuids);
     }
 
     /**
@@ -181,11 +168,11 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testFromIdentifiersUsesScalarForSingleIdentifier(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromIdentifiers([10]);
+        $rules = MsgdBlueprintRulesDTO::generateFromIdentifiers([10])->raw;
 
         $this->assertSame(
             ['AND' => ['OR' => ['sharing_group_id' => 10]]],
-            $dto->toArray()
+            $rules
         );
     }
 
@@ -196,12 +183,15 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
      */
     public function testFromIdentifiersAcceptsEmptyArray(): void
     {
-        $dto = MsgdBlueprintRulesDTO::fromIdentifiers([]);
+        $rules = MsgdBlueprintRulesDTO::generateFromIdentifiers([])->raw;
 
         $this->assertSame(
             ['AND' => ['OR' => []]],
-            $dto->toArray()
+            $rules
         );
+
+        $dto = new MsgdBlueprintRulesDTO($rules);
+
         $this->assertSame([], $dto->allSharingGroupIdentifiers);
     }
 
@@ -221,10 +211,10 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
             'invalid',
         ];
 
-        $dto = MsgdBlueprintRulesDTO::fromIdentifiers($invalidIdentifiers);
+        $rules = MsgdBlueprintRulesDTO::generateFromIdentifiers($invalidIdentifiers);
 
-        $this->assertSame([], $dto->sharingGroupsIds);
-        $this->assertSame([], $dto->sharingGroupsUuids);
+        $this->assertSame([], $rules->sharingGroupsIds);
+        $this->assertSame([], $rules->sharingGroupsUuids);
     }
 
     /**
@@ -259,7 +249,7 @@ final class MsgdBlueprintRulesDTOTest extends TestCase
             ],
         ]);
 
-        $json = $dto->toJson();
+        $json = json_encode($dto->raw, JSON_THROW_ON_ERROR);
 
         $this->assertSame(
             [

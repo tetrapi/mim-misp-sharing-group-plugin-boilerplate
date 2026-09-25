@@ -38,7 +38,7 @@ final class MsgdSharingGroupServiceTest extends TestCase
      */
     private function createUser(): MsgdUserDTO
     {
-        return MsgdUserDTO::fromArray([
+        return new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'email' => 'user@example.com',

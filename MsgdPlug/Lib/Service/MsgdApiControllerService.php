@@ -156,10 +156,12 @@ class MsgdApiControllerService
 
         if ($targetSharingGroup instanceof MsgdSharingGroupDTO) {
             return new MsgdProcessResultDTO(
-                isNew: false,
-                hasBlueprint: false,
-                sharingGroupId: $targetSharingGroup->id,
-                sharingGroupName: MsgdSanitizerUtility::sanitizeString($targetSharingGroup->name),
+                [
+                        'is_new' => false,
+                        'has_blueprint' => false,
+                        'sharing_group_id' => $targetSharingGroup->id,
+                        'sharing_group_name' => MsgdSanitizerUtility::sanitizeString($targetSharingGroup->name),
+                ]
             );
         }
 
@@ -257,10 +259,12 @@ class MsgdApiControllerService
             $databaseTransaction->commit();
 
             return new MsgdProcessResultDTO(
-                isNew: $isNew,
-                hasBlueprint: true,
-                sharingGroupId: $updatedSharingGroupRecord->id,
-                sharingGroupName: $updatedSharingGroupRecord->name,
+                [
+                        'is_new' => $isNew,
+                        'has_blueprint' => true,
+                        'sharing_group_id' => $updatedSharingGroupRecord->id,
+                        'sharing_group_name' => $updatedSharingGroupRecord->name,
+                ]
             );
         } catch (Throwable $exception) {
             $databaseTransaction->rollback();

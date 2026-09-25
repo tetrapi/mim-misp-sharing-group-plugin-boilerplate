@@ -566,7 +566,7 @@
             this.utils
               .getActiveForm()
               .find(this.utils.selectors.distSelect)
-              .val(DistributionLevels.SHARING_GROUP)
+              .val(String(DistributionLevels.SHARING_GROUP))
               .trigger("change");
 
             this.preloadExistingGroup(
@@ -617,7 +617,7 @@
       }
 
       const enabled =
-        $distSelect.val() !== DistributionLevels.SHARING_GROUP ||
+        $distSelect.val() !== String(DistributionLevels.SHARING_GROUP) ||
         this.confirmedValues.length > 0;
 
       if ($submit.length) {

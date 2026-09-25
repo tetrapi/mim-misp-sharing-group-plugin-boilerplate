@@ -27,12 +27,11 @@ readonly final class MsgdCheckBlueprintDTO
     ];
 
     /**
-     * @param array<int, int|string> $groups
+     * List of validated group IDs or UUIDs.
+     *
+     * @var array<int, int|string>
      */
-    public function __construct(
-        public array $groups
-    ) {
-    }
+    public array $groups;
 
     /**
      * Creates and validates a request instance from POST data.
@@ -40,11 +39,9 @@ readonly final class MsgdCheckBlueprintDTO
      * @param array<string, mixed> $rawData
      * @param bool $useIds
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
      */
-    public static function fromRequestData(array $rawData, bool $useIds = false): self
+    public function __construct(array $rawData = [], bool $useIds = false)
     {
         if (!isset($rawData['MsgdPlug']) || !is_array($rawData['MsgdPlug'])) {
             throw new InvalidArgumentException('Payload must be enclosed under the "MsgdPlug" root key.');
@@ -112,6 +109,6 @@ readonly final class MsgdCheckBlueprintDTO
             $groups[] = $group;
         }
 
-        return new self(groups: $groups);
+        $this->groups = $groups;
     }
 }

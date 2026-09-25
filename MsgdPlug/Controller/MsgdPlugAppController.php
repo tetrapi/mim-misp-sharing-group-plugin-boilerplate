@@ -21,6 +21,18 @@ App::uses('AppController', 'Controller');
 class MsgdPlugAppController extends AppController
 {
     /**
+     * CakePHP components required by MsgdPlug.
+     *
+     * @var array<int, string>
+     */
+    public $components = [
+        'Session',
+        'Auth',
+        'Security',
+        'RequestHandler',
+    ];
+
+    /**
      * Sets default HTTP security headers and restricts unauthenticated access.
      *
      * @return void
@@ -62,7 +74,7 @@ class MsgdPlugAppController extends AppController
         }
 
         /** @var array<string, mixed> $user */
-        return MsgdUserDTO::fromArray($user);
+        return new MsgdUserDTO($user);
     }
 
     /**

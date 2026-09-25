@@ -221,7 +221,7 @@ install_acl() {
         return
     fi
 
-    local patch="        'msgdApi' => array(\n            'processGroups' => array('*'),\n            'process-groups' => array('*'),\n            'getSharingGroups' => array('*'),\n            'get-sharing-groups' => array('*'),\n            'getBlueprintRulesGroups' => array('*'),\n            'get-blueprint-rules-groups' => array('*'),\n            'checkBlueprint' => array('*'),\n            'check-blueprint' => array('*'),\n            'checkUserPermission' => array('*'),\n            'check-user-permission' => array('*'),\n        ),"
+    local patch="        'msgdApi' => array(\n            'processGroups' => array('*'),\n            'getSharingGroups' => array('*'),\n            'getBlueprintRulesGroups' => array('*'),\n            'checkBlueprint' => array('*'),\n            'checkUserPermission' => array('*'),\n        ),"
 
     perl -i -pe "s/(const ACL_LIST\s*=\s*array\s*\()/\$1\n$patch/g" "$path"
     echo "[OK] ACL installed"

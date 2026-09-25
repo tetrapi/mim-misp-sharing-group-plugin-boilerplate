@@ -18,35 +18,42 @@ declare(strict_types=1);
 class MsgdBlueprintDTO
 {
     /**
-     * @param MsgdBlueprintRulesDTO $rules
-     * @param int $id
-     * @param string $uuid
-     * @param string $name
-     * @param int $userId
-     * @param int $orgId
-     * @param int $sharingGroupId
+     * @var MsgdBlueprintRulesDTO
      */
-    public function __construct(
-        public readonly MsgdBlueprintRulesDTO $rules,
-        public readonly int $id = 0,
-        public readonly string $uuid = '',
-        public string $name = '',
-        public readonly int $userId = 0,
-        public readonly int $orgId = 0,
-        public int $sharingGroupId = 0,
-    ) {
-    }
+    public readonly MsgdBlueprintRulesDTO $rules;
+    /**
+     * @var int
+     */
+    public readonly int $id;
+    /**
+     * @var string
+     */
+    public readonly string $uuid;
+    /**
+     * @var string
+     */
+    public string $name;
+    /**
+     * @var int
+     */
+    public readonly int $userId;
+    /**
+     * @var int
+     */
+    public readonly int $orgId;
+    /**
+     * @var int
+     */
+    public int $sharingGroupId;
 
     /**
-     * Creates a DTO from a MISP SharingGroupBlueprint record.
+     * Constructs a DTO from a MISP SharingGroupBlueprint record or data array.
      *
      * @param array<string, mixed> $data
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
      */
-    public static function fromArray(array $data): self
+    public function __construct(array $data = [])
     {
         $groupData = $data['SharingGroupBlueprint'] ?? $data;
 
@@ -60,47 +67,42 @@ class MsgdBlueprintDTO
         if ($uuid !== '' && !MsgdSanitizerUtility::isValidUuid($uuid)) {
             throw new InvalidArgumentException('Sharing Group Blueprint contains an invalid UUID.');
         }
+        $this->uuid = $uuid;
 
         $rawName = $groupData['name'] ?? '';
-        $name = MsgdSanitizerUtility::sanitizeString(is_scalar($rawName) ? (string)$rawName : '');
+        $this->name = MsgdSanitizerUtility::sanitizeString(is_scalar($rawName) ? (string)$rawName : '');
 
         $rawId = $groupData['id'] ?? 0;
-        $id = is_numeric($rawId) ? (int)$rawId : 0;
+        $this->id = is_numeric($rawId) ? (int)$rawId : 0;
 
         $rawUserId = $groupData['user_id'] ?? 0;
-        $userId = is_numeric($rawUserId) ? (int)$rawUserId : 0;
+        $this->userId = is_numeric($rawUserId) ? (int)$rawUserId : 0;
 
         $rawOrgId = $groupData['org_id'] ?? 0;
-        $orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
+        $this->orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
 
         $rawSharingGroupId = $groupData['sharing_group_id'] ?? 0;
-        $sharingGroupId = is_numeric($rawSharingGroupId) ? (int)$rawSharingGroupId : 0;
+        $this->sharingGroupId = is_numeric($rawSharingGroupId) ? (int)$rawSharingGroupId : 0;
 
         $rawRules = $groupData['rules'] ?? [];
-        if (!is_array($rawRules) && !is_string($rawRules)) {
-            $rawRules = [];
+
+        if ($rawRules instanceof MsgdBlueprintRulesDTO) {
+            $this->rules = $rawRules;
+        } else {
+            if (!is_array($rawRules) && !is_string($rawRules)) {
+                $rawRules = [];
+            }
+
+            /** @var array<string, mixed>|string $rules */
+            $rules = $rawRules;
+            $this->rules = new MsgdBlueprintRulesDTO($rules);
         }
-
-        /** @var array<string, mixed>|string $rules */
-        $rules = $rawRules;
-
-        return new self(
-            rules: MsgdBlueprintRulesDTO::fromArray($rules),
-            id: $id,
-            uuid: $uuid,
-            name: $name,
-            userId: $userId,
-            orgId: $orgId,
-            sharingGroupId: $sharingGroupId,
-        );
     }
 
     /**
      * Converts this DTO into the array expected by MISP.
      *
      * @return array<string, array<string, mixed>>
-     *
-     * @throws JsonException
      */
     public function toModelArray(): array
     {
@@ -112,7 +114,7 @@ class MsgdBlueprintDTO
                 'user_id' => $this->userId,
                 'org_id' => $this->orgId,
                 'sharing_group_id' => $this->sharingGroupId,
-                'rules' => $this->rules->toJson(),
+                'rules' => json_encode($this->rules->raw),
             ],
         ];
     }

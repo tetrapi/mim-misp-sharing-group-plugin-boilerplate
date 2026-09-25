@@ -25,14 +25,14 @@ readonly final class MsgdProcessGroupsDTO
     private const ALLOWED_FIELDS = ['groups', 'customName'];
 
     /**
-     * @param array<int, int|string> $groups
-     * @param string $customName
+     * @var array<int, int|string>
      */
-    public function __construct(
-        public array $groups,
-        public string $customName
-    ) {
-    }
+    public array $groups;
+
+    /**
+     * @var string
+     */
+    public string $customName;
 
     /**
      * Creates and validates a request instance from POST data.
@@ -40,11 +40,9 @@ readonly final class MsgdProcessGroupsDTO
      * @param array<string, mixed> $rawData
      * @param bool $useIds
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
      */
-    public static function fromRequestData(array $rawData, bool $useIds = false): self
+    public function __construct(array $rawData = [], bool $useIds = false)
     {
         if (!isset($rawData['MsgdPlug']) || !is_array($rawData['MsgdPlug'])) {
             throw new InvalidArgumentException('Payload must be enclosed under the "MsgdPlug" root key.');
@@ -134,9 +132,7 @@ readonly final class MsgdProcessGroupsDTO
             }
         }
 
-        return new self(
-            groups: $sanitizedGroups,
-            customName: $sanitizedCustomName
-        );
+        $this->groups = $sanitizedGroups;
+        $this->customName = $sanitizedCustomName;
     }
 }

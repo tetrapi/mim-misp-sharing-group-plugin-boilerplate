@@ -52,7 +52,7 @@ final class MsgdApiControllerServiceTest extends TestCase
         bool $isSiteAdmin = false,
         bool $canUseSharingGroups = true
     ): MsgdUserDTO {
-        return MsgdUserDTO::fromArray([
+        return new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'email' => 'user@example.com',
@@ -78,7 +78,9 @@ final class MsgdApiControllerServiceTest extends TestCase
     private function createSharingGroup(
         int $id
     ): MsgdSharingGroupDTO {
-        return new MsgdSharingGroupDTO($id, self::UUID_1, 'Test Group');
+        return new MsgdSharingGroupDTO(
+            ['SharingGroup' => ['id' => $id, 'uuid' => self::UUID_1, 'name' => 'Test Group']]
+        );
     }
 
     /**
@@ -93,15 +95,15 @@ final class MsgdApiControllerServiceTest extends TestCase
         int $sharingGroupId,
         array $identifiers = []
     ): MsgdBlueprintDTO {
-        return new MsgdBlueprintDTO(
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($identifiers),
-            id: 5,
-            uuid: self::UUID_1,
-            name: 'Test Blueprint',
-            userId: 1,
-            orgId: 10,
-            sharingGroupId: $sharingGroupId
-        );
+        return new MsgdBlueprintDTO([
+            'rules' => MsgdBlueprintRulesDTO::generateFromIdentifiers($identifiers),
+            'id' => 5,
+            'uuid' => self::UUID_1,
+            'name' => 'Test Blueprint',
+            'user_id' => 1,
+            'org_id' => 10,
+            'sharing_group_id' => $sharingGroupId
+        ]);
     }
 
     /**
@@ -298,7 +300,11 @@ final class MsgdApiControllerServiceTest extends TestCase
         $bpLib->method('findBySharingGroupRules')
             ->willReturn($this->createBlueprint(20, [10]));
 
-        $payload = new MsgdCheckBlueprintDTO(groups: [10]);
+        $payload = new MsgdCheckBlueprintDTO([
+            'MsgdPlug' => [
+                'groups' => [10, 20],
+            ]
+        ], true);
 
         $this->assertTrue(
             $this->createService($sgLib, $bpLib)
@@ -328,8 +334,8 @@ final class MsgdApiControllerServiceTest extends TestCase
             ->willThrowException(new RuntimeException('Datasource unavailable.'));
 
         $payload = new MsgdProcessGroupsDTO(
-            groups: [10],
-            customName: 'Test'
+            ['MsgdPlug' => ['groups' => [10], 'customName' => 'Test']],
+            true
         );
 
         $this->expectException(RuntimeException::class);
@@ -370,8 +376,8 @@ final class MsgdApiControllerServiceTest extends TestCase
         $dataSource->expects($this->once())->method('commit');
 
         $payload = new MsgdProcessGroupsDTO(
-            groups: [10],
-            customName: 'Test'
+            ['MsgdPlug' => ['groups' => [10], 'customName' => 'Test']],
+            true
         );
 
         $result = $this->createService($sgLib, $bpLib, $voter)
@@ -412,8 +418,8 @@ final class MsgdApiControllerServiceTest extends TestCase
         $dataSource->expects($this->once())->method('commit');
 
         $payload = new MsgdProcessGroupsDTO(
-            groups: [10],
-            customName: 'Test'
+            ['MsgdPlug' => ['groups' => [10], 'customName' => 'Test']],
+            true
         );
 
         $result = $this->createService($sgLib, $bpLib, $voter)
@@ -448,8 +454,8 @@ final class MsgdApiControllerServiceTest extends TestCase
         $dataSource->expects($this->once())->method('rollback');
 
         $payload = new MsgdProcessGroupsDTO(
-            groups: [10],
-            customName: 'Test'
+            ['MsgdPlug' => ['groups' => [10], 'customName' => 'Test']],
+            true
         );
 
         $this->expectException(RuntimeException::class);

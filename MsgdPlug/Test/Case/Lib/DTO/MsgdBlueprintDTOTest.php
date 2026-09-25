@@ -50,7 +50,7 @@ final class MsgdBlueprintDTOTest extends TestCase
             ],
         ];
 
-        $dto = MsgdBlueprintDTO::fromArray($data);
+        $dto = new MsgdBlueprintDTO($data);
 
         $this->assertSame(10, $dto->id);
         $this->assertSame(self::UUID, $dto->uuid);
@@ -69,7 +69,7 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testFromArrayAcceptsUnwrappedData(): void
     {
-        $dto = MsgdBlueprintDTO::fromArray([
+        $dto = new MsgdBlueprintDTO([
             'id' => '10',
             'uuid' => self::UUID,
             'name' => 'Blueprint',
@@ -92,7 +92,7 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testFromArraySanitizesName(): void
     {
-        $dto = MsgdBlueprintDTO::fromArray([
+        $dto = new MsgdBlueprintDTO([
             'name' => '<script>alert(1)</script>Blueprint',
             'rules' => [],
         ]);
@@ -112,7 +112,7 @@ final class MsgdBlueprintDTOTest extends TestCase
             'Sharing Group Blueprint contains an invalid UUID.'
         );
 
-        MsgdBlueprintDTO::fromArray([
+        new MsgdBlueprintDTO([
             'uuid' => 'invalid-uuid',
             'rules' => [],
         ]);
@@ -125,7 +125,7 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testFromArrayAcceptsEmptyUuid(): void
     {
-        $dto = MsgdBlueprintDTO::fromArray([
+        $dto = new MsgdBlueprintDTO([
             'uuid' => '',
             'rules' => [],
         ]);
@@ -140,7 +140,7 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testFromArrayUsesDefaultValues(): void
     {
-        $dto = MsgdBlueprintDTO::fromArray([]);
+        $dto = new MsgdBlueprintDTO([]);
 
         $this->assertSame(0, $dto->id);
         $this->assertSame('', $dto->uuid);
@@ -148,7 +148,7 @@ final class MsgdBlueprintDTOTest extends TestCase
         $this->assertSame(0, $dto->userId);
         $this->assertSame(0, $dto->orgId);
         $this->assertSame(0, $dto->sharingGroupId);
-        $this->assertSame([], $dto->rules->toArray());
+        $this->assertSame([], $dto->rules->raw);
     }
 
     /**
@@ -160,23 +160,23 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testToModelArray(): void
     {
-        $rules = new MsgdBlueprintRulesDTO([
+        $rules = [
             'AND' => [
                 'OR' => [
                     'sharing_group_id' => [10, 20],
                 ],
             ],
-        ]);
+        ];
 
-        $dto = new MsgdBlueprintDTO(
-            id: 1,
-            uuid: self::UUID,
-            name: 'Blueprint',
-            userId: 2,
-            orgId: 3,
-            sharingGroupId: 4,
-            rules: $rules
-        );
+        $dto = new MsgdBlueprintDTO([
+            'rules' => $rules,
+            'id' => 1,
+            'uuid' => self::UUID,
+            'name' => 'Blueprint',
+            'user_id' => 2,
+            'org_id' => 3,
+            'sharing_group_id' => 4,
+        ]);
 
         $result = $dto->toModelArray();
 
@@ -199,23 +199,23 @@ final class MsgdBlueprintDTOTest extends TestCase
      */
     public function testDirectConstructorInstantiation(): void
     {
-        $rules = new MsgdBlueprintRulesDTO([
+        $rules = [
             'AND' => [
                 'OR' => [
                     'sharing_group_id' => 42,
                 ],
             ],
-        ]);
+        ];
 
-        $dto = new MsgdBlueprintDTO(
-            id: 1,
-            uuid: '11111111-1111-4111-8111-111111111111',
-            name: 'Test Blueprint',
-            userId: 10,
-            orgId: 20,
-            sharingGroupId: 30,
-            rules: $rules
-        );
+        $dto = new MsgdBlueprintDTO([
+            'rules' => $rules,
+            'id' => 1,
+            'uuid' => '11111111-1111-4111-8111-111111111111',
+            'name' => 'Test Blueprint',
+            'user_id' => 10,
+            'org_id' => 20,
+            'sharing_group_id' => 30,
+        ]);
 
         $this->assertSame(1, $dto->id);
         $this->assertSame('11111111-1111-4111-8111-111111111111', $dto->uuid);
@@ -223,6 +223,6 @@ final class MsgdBlueprintDTOTest extends TestCase
         $this->assertSame(10, $dto->userId);
         $this->assertSame(20, $dto->orgId);
         $this->assertSame(30, $dto->sharingGroupId);
-        $this->assertSame($rules, $dto->rules);
+        $this->assertSame([42], $dto->rules->sharingGroupsIds);
     }
 }

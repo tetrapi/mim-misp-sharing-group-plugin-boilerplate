@@ -18,37 +18,48 @@ declare(strict_types=1);
 readonly final class MsgdUserDTO
 {
     /**
-     * @param int $id
-     * @param int $orgId
-     * @param string $email
-     * @param string|null $orgName
-     * @param string|null $orgUuid
-     * @param bool $isSiteAdmin
-     * @param bool $canUseSharingGroups
-     * @param bool $canSync
-     * @param bool $disabled
+     * @var int
      */
-    public function __construct(
-        public int $id,
-        public int $orgId,
-        public string $email,
-        public ?string $orgName,
-        public ?string $orgUuid,
-        public bool $isSiteAdmin,
-        public bool $canUseSharingGroups,
-        public bool $canSync,
-        public bool $disabled
-    ) {
-    }
+    public int $id;
+    /**
+     * @var int
+     */
+    public int $orgId;
+    /**
+     * @var string
+     */
+    public string $email;
+    /**
+     * @var string|null
+     */
+    public ?string $orgName;
+    /**
+     * @var string|null
+     */
+    public ?string $orgUuid;
+    /**
+     * @var bool
+     */
+    public bool $isSiteAdmin;
+    /**
+     * @var bool
+     */
+    public bool $canUseSharingGroups;
+    /**
+     * @var bool
+     */
+    public bool $canSync;
+    /**
+     * @var bool
+     */
+    public bool $disabled;
 
     /**
-     * Creates a normalized user DTO from the authenticated MISP user.
+     * Constructs a normalized user DTO from the authenticated MISP user data.
      *
      * @param array<string, mixed> $data
-     *
-     * @return self
      */
-    public static function fromArray(array $data): self
+    public function __construct(array $data)
     {
         $role = is_array($data['Role'] ?? null)
             ? $data['Role']
@@ -59,31 +70,27 @@ readonly final class MsgdUserDTO
             : [];
 
         $rawId = $data['id'] ?? 0;
-        $id = is_numeric($rawId) ? (int)$rawId : 0;
+        $this->id = is_numeric($rawId) ? (int)$rawId : 0;
 
         $rawOrgId = $data['org_id'] ?? 0;
-        $orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
+        $this->orgId = is_numeric($rawOrgId) ? (int)$rawOrgId : 0;
 
         $rawEmail = $data['email'] ?? '';
         $email = is_scalar($rawEmail) ? (string)$rawEmail : '';
+        $this->email = MsgdSanitizerUtility::sanitizeString($email);
 
         $rawOrgName = $organisation['name'] ?? '';
         $orgName = is_scalar($rawOrgName) ? (string)$rawOrgName : '';
+        $this->orgName = MsgdSanitizerUtility::sanitizeString($orgName);
 
         $rawOrgUuid = $organisation['uuid'] ?? '';
         $orgUuid = is_scalar($rawOrgUuid) ? (string)$rawOrgUuid : '';
+        $this->orgUuid = MsgdSanitizerUtility::sanitizeString($orgUuid);
 
-        return new self(
-            id: $id,
-            orgId: $orgId,
-            email: MsgdSanitizerUtility::sanitizeString($email),
-            orgName: MsgdSanitizerUtility::sanitizeString($orgName),
-            orgUuid: MsgdSanitizerUtility::sanitizeString($orgUuid),
-            isSiteAdmin: (bool)($role['perm_site_admin'] ?? false),
-            canUseSharingGroups: (bool)($role['perm_sharing_group'] ?? false),
-            canSync: (bool)($role['perm_sync'] ?? false),
-            disabled: (bool)($data['disabled'] ?? false)
-        );
+        $this->isSiteAdmin = (bool)($role['perm_site_admin'] ?? false);
+        $this->canUseSharingGroups = (bool)($role['perm_sharing_group'] ?? false);
+        $this->canSync = (bool)($role['perm_sync'] ?? false);
+        $this->disabled = (bool)($data['disabled'] ?? false);
     }
 
     /**

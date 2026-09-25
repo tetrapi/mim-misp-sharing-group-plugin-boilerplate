@@ -18,27 +18,31 @@ declare(strict_types=1);
 readonly final class MsgdProcessResultDTO
 {
     /**
-     * @param bool $isNew
-     * @param bool $hasBlueprint
-     * @param int $sharingGroupId
-     * @param string $sharingGroupName
+     * @var bool
      */
-    public function __construct(
-        public bool $isNew,
-        public bool $hasBlueprint,
-        public int $sharingGroupId,
-        public string $sharingGroupName
-    ) {
-    }
+    public bool $isNew;
+
+    /**
+     * @var bool
+     */
+    public bool $hasBlueprint;
+
+    /**
+     * @var int
+     */
+    public int $sharingGroupId;
+
+    /**
+     * @var string
+     */
+    public string $sharingGroupName;
 
     /**
      * Creates a DTO from the service result array.
      *
      * @param array<string, mixed> $data
-     *
-     * @return self
      */
-    public static function fromArray(array $data): self
+    public function __construct(array $data = [])
     {
         $rawGroupId = $data['sharing_group_id'] ?? 0;
         $sharingGroupId = is_numeric($rawGroupId) ? (int)$rawGroupId : 0;
@@ -46,11 +50,9 @@ readonly final class MsgdProcessResultDTO
         $rawGroupName = $data['sharing_group_name'] ?? '';
         $sharingGroupName = is_scalar($rawGroupName) ? (string)$rawGroupName : '';
 
-        return new self(
-            isNew: (bool)($data['new'] ?? false),
-            hasBlueprint: (bool)($data['has_blueprint'] ?? false),
-            sharingGroupId: $sharingGroupId,
-            sharingGroupName: MsgdSanitizerUtility::sanitizeString($sharingGroupName)
-        );
+        $this->isNew = (bool)($data['is_new'] ?? false);
+        $this->hasBlueprint = (bool)($data['has_blueprint'] ?? false);
+        $this->sharingGroupId = $sharingGroupId;
+        $this->sharingGroupName = MsgdSanitizerUtility::sanitizeString($sharingGroupName);
     }
 }

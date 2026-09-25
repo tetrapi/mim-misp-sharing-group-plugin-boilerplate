@@ -29,7 +29,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryDefaultsToFalse(): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([]);
+        $dto = new MsgdGetSharingGroupsDTO([]);
 
         $this->assertFalse($dto->all);
     }
@@ -45,7 +45,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryParsesTrueValues(mixed $value): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetSharingGroupsDTO([
             'all' => $value,
         ]);
 
@@ -63,7 +63,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryParsesFalseValues(mixed $value): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetSharingGroupsDTO([
             'all' => $value,
         ]);
 
@@ -111,7 +111,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQuerySupportsMsgdPlugWrapper(): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetSharingGroupsDTO([
             'MsgdPlug' => [
                 'all' => '1',
             ],
@@ -127,7 +127,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryIgnoresFrameworkParameters(): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetSharingGroupsDTO([
             'all' => 'true',
             'url' => 'msgd_plug/api/sharing_groups',
             '_' => '123',
@@ -143,7 +143,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testFromRequestQueryIgnoresFrameworkParametersInsideWrapper(): void
     {
-        $dto = MsgdGetSharingGroupsDTO::fromRequestQuery([
+        $dto = new MsgdGetSharingGroupsDTO([
             'MsgdPlug' => [
                 'all' => 'true',
                 'url' => 'msgd_plug/api/sharing_groups',
@@ -166,7 +166,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
             'Unauthorized parameters detected in query: [invalid_param].'
         );
 
-        MsgdGetSharingGroupsDTO::fromRequestQuery([
+        new MsgdGetSharingGroupsDTO([
             'all' => 'true',
             'invalid_param' => 'value',
         ]);
@@ -184,7 +184,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
             'Query parameter "all" must be a scalar value.'
         );
 
-        MsgdGetSharingGroupsDTO::fromRequestQuery([
+        new MsgdGetSharingGroupsDTO([
             'all' => ['invalid'],
         ]);
     }
@@ -201,7 +201,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
             'Query parameter "all" must be a valid boolean value.'
         );
 
-        MsgdGetSharingGroupsDTO::fromRequestQuery([
+        new MsgdGetSharingGroupsDTO([
             'all' => 'maybe',
         ]);
     }
@@ -218,7 +218,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
             'Unauthorized parameters detected in query: [MsgdPlug].'
         );
 
-        MsgdGetSharingGroupsDTO::fromRequestQuery([
+        new MsgdGetSharingGroupsDTO([
             'MsgdPlug' => 'invalid',
             'all' => 'true',
         ]);
@@ -231,7 +231,7 @@ final class MsgdGetSharingGroupsDTOTest extends TestCase
      */
     public function testDirectConstructorInstantiation(): void
     {
-        $this->assertFalse((new MsgdGetSharingGroupsDTO())->all);
-        $this->assertTrue((new MsgdGetSharingGroupsDTO(true))->all);
+        $this->assertFalse((new MsgdGetSharingGroupsDTO(['MsgdPlug' => ['all' => false]]))->all);
+        $this->assertTrue((new MsgdGetSharingGroupsDTO(['MsgdPlug' => ['all' => true]]))->all);
     }
 }

@@ -110,7 +110,7 @@ class MsgdApiController extends MsgdPlugAppController
             }
             /** @var array<string, mixed> $query */
             $query = $this->request->query;
-            $requestData = MsgdGetBlueprintRulesGroupsDTO::fromRequestQuery($query);
+            $requestData = new MsgdGetBlueprintRulesGroupsDTO($query);
             $groups = $this->msgdService->getSharingGroupsByGeneratedBlueprintGroup($user, $requestData->group);
 
             return $this->buildJsonResponse([
@@ -163,7 +163,7 @@ class MsgdApiController extends MsgdPlugAppController
             }
             /** @var array<string, mixed> $query */
             $query = $this->request->query;
-            $requestData = MsgdGetSharingGroupsDTO::fromRequestQuery($query);
+            $requestData = new MsgdGetSharingGroupsDTO($query);
             $groups = $this->msgdService->getAvailableSharingGroups($user, $requestData->all);
 
             return $this->buildJsonResponse([
@@ -218,7 +218,7 @@ class MsgdApiController extends MsgdPlugAppController
             }
             /** @var array<string, mixed> $data */
             $data = $this->request->data;
-            $requestData = MsgdCheckBlueprintDTO::fromRequestData(
+            $requestData = new MsgdCheckBlueprintDTO(
                 $data,
                 $this->msgdService->isUsingIds()
             );
@@ -285,7 +285,7 @@ class MsgdApiController extends MsgdPlugAppController
             }
             /** @var array<string, mixed> $data */
             $data = $this->request->data;
-            $requestData = MsgdProcessGroupsDTO::fromRequestData(
+            $requestData = new MsgdProcessGroupsDTO(
                 $data,
                 $this->msgdService->isUsingIds()
             );

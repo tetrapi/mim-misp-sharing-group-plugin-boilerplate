@@ -25,23 +25,20 @@ readonly final class MsgdGetBlueprintRulesGroupsDTO
     private const ALLOWED_FIELDS = ['group'];
 
     /**
-     * @param int $group
+     * Validated group integer ID.
+     *
+     * @var int
      */
-    public function __construct(
-        public int $group
-    ) {
-    }
+    public int $group;
 
     /**
      * Creates and validates a request instance from query parameters.
      *
      * @param array<string, mixed> $rawQueryParams
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
      */
-    public static function fromRequestQuery(array $rawQueryParams): self
+    public function __construct(array $rawQueryParams = [])
     {
         /** @var array<string, mixed> $payload */
         $payload = isset($rawQueryParams['MsgdPlug']) && is_array($rawQueryParams['MsgdPlug'])
@@ -88,6 +85,6 @@ readonly final class MsgdGetBlueprintRulesGroupsDTO
             throw new InvalidArgumentException('Query parameter "group" must be a valid positive integer.');
         }
 
-        return new self(group: $group);
+        $this->group = $group;
     }
 }

@@ -33,7 +33,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
      */
     public function testFromRequestDataSuccessWithIntegerIds(): void
     {
-        $dto = MsgdProcessGroupsDTO::fromRequestData([
+        $dto = new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1, '2', 3],
                 'customName' => ' Blueprint Group ',
@@ -51,7 +51,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
      */
     public function testFromRequestDataSuccessWithUuids(): void
     {
-        $dto = MsgdProcessGroupsDTO::fromRequestData([
+        $dto = new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [self::UUID_1, self::UUID_2],
             ],
@@ -68,7 +68,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
      */
     public function testFromRequestDataSanitizesCustomName(): void
     {
-        $dto = MsgdProcessGroupsDTO::fromRequestData([
+        $dto = new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'customName' => '  <b>Blueprint</b>  ',
@@ -90,7 +90,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Payload must be enclosed under the "MsgdPlug" root key.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'groups' => [1],
         ]);
     }
@@ -104,7 +104,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => 'invalid',
         ]);
     }
@@ -121,7 +121,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "groups" is required and must be an array.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [],
             ],
@@ -140,7 +140,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Unauthorized fields in MsgdPlug payload: [invalid_key].'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'invalid_key' => 'value',
@@ -157,7 +157,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [[1]],
             ],
@@ -180,7 +180,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "groups" contains invalid integer IDs.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [$group],
             ],
@@ -216,7 +216,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "groups" contains invalid UUIDs.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => ['invalid-uuid'],
             ],
@@ -235,7 +235,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "customName" must be a scalar value.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'customName' => ['invalid'],
@@ -255,7 +255,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "customName" cannot exceed 191 characters.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'customName' => str_repeat('a', 192),
@@ -272,7 +272,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
     {
         $name = str_repeat('a', 191);
 
-        $dto = MsgdProcessGroupsDTO::fromRequestData([
+        $dto = new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'customName' => $name,
@@ -294,7 +294,7 @@ final class MsgdProcessGroupsDTOTest extends TestCase
             'Field "customName" cannot be empty when provided.'
         );
 
-        MsgdProcessGroupsDTO::fromRequestData([
+        new MsgdProcessGroupsDTO([
             'MsgdPlug' => [
                 'groups' => [1],
                 'customName' => '   ',
@@ -310,8 +310,8 @@ final class MsgdProcessGroupsDTOTest extends TestCase
     public function testDirectConstructorInstantiation(): void
     {
         $dto = new MsgdProcessGroupsDTO(
-            groups: [1, 2],
-            customName: 'Blueprint'
+            ['MsgdPlug' => ['groups' => [1, 2], 'customName' => 'Blueprint']],
+            true
         );
 
         $this->assertSame([1, 2], $dto->groups);

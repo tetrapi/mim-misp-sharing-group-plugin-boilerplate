@@ -822,10 +822,14 @@ final class MsgdApiControllerTest extends TestCase
     {
         $serviceMock = $this->createServiceMock();
         $result = new MsgdProcessResultDTO(
-            isNew: true,
-            hasBlueprint: true,
-            sharingGroupId: 10,
-            sharingGroupName: 'Test Group'
+            [
+                'group' => [
+                    'is_new' => true,
+                    'has_blueprint' => true,
+                    'sharing_group_id' => 10,
+                    'sharing_group_name' => 'Test Group',
+                ]
+            ]
         );
 
         /** @var InvocationMocker $expectation */

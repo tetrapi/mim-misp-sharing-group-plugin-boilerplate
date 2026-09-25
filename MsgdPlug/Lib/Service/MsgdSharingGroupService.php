@@ -97,7 +97,7 @@ class MsgdSharingGroupService
             }
 
             /** @var array<string, mixed> $sharingGroup */
-            return MsgdSharingGroupDTO::fromArray($sharingGroup);
+            return new MsgdSharingGroupDTO($sharingGroup);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -150,7 +150,7 @@ class MsgdSharingGroupService
             }
 
             /** @var array<string, mixed> $sharingGroup */
-            return MsgdSharingGroupDTO::fromArray($sharingGroup);
+            return new MsgdSharingGroupDTO($sharingGroup);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -255,7 +255,7 @@ class MsgdSharingGroupService
                 }
             }
 
-            return MsgdMirrorGroupsDTO::fromArray($resultUuids, $resultIds);
+            return new MsgdMirrorGroupsDTO($resultIds, $resultUuids);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException($exception, '[MsgdSharingGroupService] getMirrorGroups');
 
@@ -320,7 +320,7 @@ class MsgdSharingGroupService
                 }
 
                 /** @var array<string, mixed> $group */
-                $mappedSharingGroupsList[] = MsgdSharingGroupDTO::fromArray($group);
+                $mappedSharingGroupsList[] = new MsgdSharingGroupDTO($group);
             }
 
             return $mappedSharingGroupsList;

@@ -92,7 +92,7 @@ class MsgdBlueprintService
             }
 
             /** @var array<string, mixed> $blueprint */
-            return MsgdBlueprintDTO::fromArray($blueprint);
+            return new MsgdBlueprintDTO($blueprint);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -138,7 +138,7 @@ class MsgdBlueprintService
             }
 
             /** @var array<string, mixed> $blueprint */
-            return MsgdBlueprintDTO::fromArray($blueprint);
+            return new MsgdBlueprintDTO($blueprint);
         } catch (Throwable $exception) {
             MsgdLoggerUtility::logException(
                 $exception,
@@ -238,7 +238,7 @@ class MsgdBlueprintService
                 }
 
                 /** @var array<string, mixed> $blueprintData */
-                $blueprint = MsgdBlueprintDTO::fromArray($blueprintData);
+                $blueprint = new MsgdBlueprintDTO($blueprintData);
                 $extractedIdentifiers = $blueprint->rules->allSharingGroupIdentifiers;
 
                 if (empty($extractedIdentifiers)) {
@@ -441,15 +441,15 @@ class MsgdBlueprintService
             ? $sanitizedName
             : 'MsgdPlug Blueprint - ' . date('Y-m-d H:i:s');
 
-        $newBlueprint = new MsgdBlueprintDTO(
-            rules: MsgdBlueprintRulesDTO::fromIdentifiers($payload->groups),
-            id: 0,
-            uuid: CakeText::uuid(),
-            name: $blueprintName,
-            userId: $user->id,
-            orgId: $user->orgId,
-            sharingGroupId: 0,
-        );
+        $newBlueprint = new MsgdBlueprintDTO([
+            'id' => 0,
+            'uuid' => CakeText::uuid(),
+            'name' => $blueprintName,
+            'user_id' => $user->id,
+            'org_id' => $user->orgId,
+            'sharing_group_id' => 0,
+            'rules' => MsgdBlueprintRulesDTO::generateFromIdentifiers($payload->groups),
+        ]);
 
         if (
             !$this->sharingGroupBlueprint->validateBlueprintPermissions(

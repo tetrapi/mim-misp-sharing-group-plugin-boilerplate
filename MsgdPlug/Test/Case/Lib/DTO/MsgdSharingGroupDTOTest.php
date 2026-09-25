@@ -31,7 +31,7 @@ final class MsgdSharingGroupDTOTest extends TestCase
      */
     public function testFromArraySuccess(): void
     {
-        $dto = MsgdSharingGroupDTO::fromArray([
+        $dto = new MsgdSharingGroupDTO([
             'SharingGroup' => [
                 'id' => 10,
                 'uuid' => self::UUID,
@@ -51,7 +51,7 @@ final class MsgdSharingGroupDTOTest extends TestCase
      */
     public function testFromArrayAcceptsUnwrappedData(): void
     {
-        $dto = MsgdSharingGroupDTO::fromArray([
+        $dto = new MsgdSharingGroupDTO([
             'id' => '20',
             'uuid' => self::UUID,
             'name' => 'Group',
@@ -69,7 +69,7 @@ final class MsgdSharingGroupDTOTest extends TestCase
      */
     public function testFromArrayUsesDefaults(): void
     {
-        $dto = MsgdSharingGroupDTO::fromArray([]);
+        $dto = new MsgdSharingGroupDTO([]);
 
         $this->assertSame(0, $dto->id);
         $this->assertSame('', $dto->uuid);
@@ -83,7 +83,7 @@ final class MsgdSharingGroupDTOTest extends TestCase
      */
     public function testFromArraySanitizesValues(): void
     {
-        $dto = MsgdSharingGroupDTO::fromArray([
+        $dto = new MsgdSharingGroupDTO([
             'uuid' => '  ' . self::UUID . '  ',
             'name' => '<script>alert(1)</script>Group',
         ]);
@@ -102,9 +102,7 @@ final class MsgdSharingGroupDTOTest extends TestCase
     public function testDirectConstructorInstantiation(): void
     {
         $dto = new MsgdSharingGroupDTO(
-            id: 10,
-            uuid: self::UUID,
-            name: 'Group'
+            ['SharingGroup' => ['id' => 10, 'uuid' => self::UUID, 'name' => 'Group']]
         );
 
         $this->assertSame(10, $dto->id);

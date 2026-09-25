@@ -17,30 +17,22 @@ declare(strict_types=1);
  */
 readonly final class MsgdSharingGroupDTO
 {
-    /**
-     * @param int $id
-     * @param string $uuid
-     * @param string $name
-     */
-    public function __construct(
-        public int $id,
-        public string $uuid,
-        public string $name
-    ) {
-    }
+    public int $id;
+    public string $uuid;
+    public string $name;
 
     /**
-     * Factory to build DTO directly from CakePHP array structure.
+     * Constructs DTO directly from CakePHP array structure.
      *
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data): self
+    public function __construct(array $data)
     {
         $rawGroupData = $data['SharingGroup'] ?? $data;
         $groupData = is_array($rawGroupData) ? $rawGroupData : $data;
 
         $rawId = $groupData['id'] ?? 0;
-        $id = is_numeric($rawId) ? (int)$rawId : 0;
+        $this->id = is_numeric($rawId) ? (int)$rawId : 0;
 
         $rawUuid = $groupData['uuid'] ?? '';
         $uuid = is_scalar($rawUuid) ? (string)$rawUuid : '';
@@ -48,10 +40,7 @@ readonly final class MsgdSharingGroupDTO
         $rawName = $groupData['name'] ?? '';
         $name = is_scalar($rawName) ? (string)$rawName : '';
 
-        return new self(
-            id: $id,
-            uuid: MsgdSanitizerUtility::sanitizeString($uuid),
-            name: MsgdSanitizerUtility::sanitizeString($name)
-        );
+        $this->uuid = MsgdSanitizerUtility::sanitizeString($uuid);
+        $this->name = MsgdSanitizerUtility::sanitizeString($name);
     }
 }

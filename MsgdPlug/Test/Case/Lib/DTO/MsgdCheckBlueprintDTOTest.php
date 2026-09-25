@@ -33,7 +33,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
      */
     public function testFromRequestDataSuccessWithIntegerIds(): void
     {
-        $dto = MsgdCheckBlueprintDTO::fromRequestData([
+        $dto = new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [10, '25', 42],
             ],
@@ -49,7 +49,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
      */
     public function testFromRequestDataSuccessWithUuids(): void
     {
-        $dto = MsgdCheckBlueprintDTO::fromRequestData([
+        $dto = new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [self::UUID_1, self::UUID_2],
             ],
@@ -65,7 +65,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
      */
     public function testFromRequestDataDefaultsToUuidMode(): void
     {
-        $dto = MsgdCheckBlueprintDTO::fromRequestData([
+        $dto = new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [self::UUID_1],
             ],
@@ -86,7 +86,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Payload must be enclosed under the "MsgdPlug" root key.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData(['groups' => [1]]);
+        new MsgdCheckBlueprintDTO(['groups' => [1]]);
     }
 
     /**
@@ -98,7 +98,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => 'invalid',
         ]);
     }
@@ -115,7 +115,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Field "groups" is required and must be a non-empty array.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [],
             ],
@@ -131,7 +131,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [],
         ]);
     }
@@ -148,7 +148,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Unauthorized fields detected in payload: [unauthorized_key].'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [10],
                 'unauthorized_key' => 'value',
@@ -168,7 +168,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Field "groups" contains invalid non-scalar values.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [[123]],
             ],
@@ -187,7 +187,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Field "groups" contains empty values.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => ['   '],
             ],
@@ -206,7 +206,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Field "groups" contains invalid integer IDs.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => ['abc'],
             ],
@@ -222,7 +222,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [0],
             ],
@@ -238,7 +238,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [-1],
             ],
@@ -254,7 +254,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => ['01'],
             ],
@@ -273,7 +273,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
             'Field "groups" contains invalid UUIDs.'
         );
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => ['not-a-uuid'],
             ],
@@ -289,7 +289,7 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        MsgdCheckBlueprintDTO::fromRequestData([
+        new MsgdCheckBlueprintDTO([
             'MsgdPlug' => [
                 'groups' => [10, 20],
             ],
@@ -303,7 +303,11 @@ final class MsgdCheckBlueprintDTOTest extends TestCase
      */
     public function testDirectConstructorInstantiation(): void
     {
-        $dto = new MsgdCheckBlueprintDTO([1, 2, 3]);
+        $dto = new MsgdCheckBlueprintDTO([
+            'MsgdPlug' => [
+                'groups' => [1, 2, 3],
+            ]
+        ], true);
 
         $this->assertSame([1, 2, 3], $dto->groups);
     }

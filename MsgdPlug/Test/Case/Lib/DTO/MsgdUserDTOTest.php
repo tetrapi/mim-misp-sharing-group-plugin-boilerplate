@@ -31,7 +31,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArraySuccess(): void
     {
-        $dto = MsgdUserDTO::fromArray([
+        $dto = new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'email' => 'user@example.com',
@@ -66,7 +66,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArrayUsesDefaults(): void
     {
-        $dto = MsgdUserDTO::fromArray([]);
+        $dto = new MsgdUserDTO([]);
 
         $this->assertSame(0, $dto->id);
         $this->assertSame(0, $dto->orgId);
@@ -86,7 +86,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArrayHandlesInvalidRoleStructure(): void
     {
-        $dto = MsgdUserDTO::fromArray([
+        $dto = new MsgdUserDTO([
             'id' => 5,
             'Role' => 'invalid',
         ]);
@@ -104,7 +104,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArrayHandlesInvalidOrganisationStructure(): void
     {
-        $dto = MsgdUserDTO::fromArray([
+        $dto = new MsgdUserDTO([
             'id' => 5,
             'Organisation' => 'invalid',
         ]);
@@ -121,7 +121,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArrayHandlesDisabledUser(): void
     {
-        $dto = MsgdUserDTO::fromArray([
+        $dto = new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'disabled' => true,
@@ -137,7 +137,7 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testFromArraySanitizesStringValues(): void
     {
-        $dto = MsgdUserDTO::fromArray([
+        $dto = new MsgdUserDTO([
             'email' => '<script>alert(1)</script>user@example.com',
             'Organisation' => [
                 'name' => '<script>Organisation</script>',
@@ -160,17 +160,22 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testToModelArray(): void
     {
-        $dto = new MsgdUserDTO(
-            id: 1,
-            orgId: 10,
-            email: 'user@example.com',
-            orgName: 'Test Organisation',
-            orgUuid: self::ORG_UUID,
-            isSiteAdmin: true,
-            canUseSharingGroups: true,
-            canSync: false,
-            disabled: false
-        );
+        $dto = new MsgdUserDTO([
+            'id' => 1,
+            'org_id' => 10,
+            'email' => 'user@example.com',
+            'disabled' => false,
+            'Role' => [
+                'perm_site_admin' => true,
+                'perm_sharing_group' => true,
+                'perm_sync' => false,
+            ],
+            'Organisation' => [
+                'id' => 10,
+                'name' => 'Test Organisation',
+                'uuid' => self::ORG_UUID,
+            ],
+        ]);
 
         $this->assertSame([
             'id' => 1,
@@ -197,19 +202,24 @@ final class MsgdUserDTOTest extends TestCase
      */
     public function testDirectConstructorAcceptsNullableOrganisationFields(): void
     {
-        $dto = new MsgdUserDTO(
-            id: 1,
-            orgId: 10,
-            email: 'user@example.com',
-            orgName: null,
-            orgUuid: null,
-            isSiteAdmin: false,
-            canUseSharingGroups: false,
-            canSync: false,
-            disabled: false
-        );
+        $dto = new MsgdUserDTO([
+            'id' => 1,
+            'org_id' => 10,
+            'email' => 'user@example.com',
+            'disabled' => false,
+            'Role' => [
+                'perm_site_admin' => false,
+                'perm_sharing_group' => false,
+                'perm_sync' => false,
+            ],
+            'Organisation' => [
+                'id' => 10,
+                'name' => '',
+                'uuid' => '',
+            ],
+        ]);
 
-        $this->assertNull($dto->orgName);
-        $this->assertNull($dto->orgUuid);
+        $this->assertEmpty($dto->orgName);
+        $this->assertEmpty($dto->orgUuid);
     }
 }

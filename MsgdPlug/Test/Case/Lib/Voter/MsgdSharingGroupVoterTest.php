@@ -36,7 +36,7 @@ final class MsgdSharingGroupVoterTest extends TestCase
         bool $canUseSharingGroups = false,
         string $email = 'user@example.com'
     ): MsgdUserDTO {
-        return MsgdUserDTO::fromArray([
+        return new MsgdUserDTO([
             'id' => 1,
             'org_id' => 10,
             'email' => $email,

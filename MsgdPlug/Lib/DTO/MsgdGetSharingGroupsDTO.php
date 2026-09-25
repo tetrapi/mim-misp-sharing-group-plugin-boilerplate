@@ -25,23 +25,20 @@ readonly final class MsgdGetSharingGroupsDTO
     private const ALLOWED_FIELDS = ['all'];
 
     /**
-     * @param bool $all
+     * Indicates whether to fetch all sharing groups.
+     *
+     * @var bool
      */
-    public function __construct(
-        public bool $all = false
-    ) {
-    }
+    public bool $all;
 
     /**
      * Creates and validates a request instance from query parameters.
      *
      * @param array<string, mixed> $rawQueryParams
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
      */
-    public static function fromRequestQuery(array $rawQueryParams): self
+    public function __construct(array $rawQueryParams = [])
     {
         /** @var array<string, mixed> $payload */
         $payload = isset($rawQueryParams['MsgdPlug']) && is_array($rawQueryParams['MsgdPlug'])
@@ -78,6 +75,6 @@ readonly final class MsgdGetSharingGroupsDTO
             throw new InvalidArgumentException('Query parameter "all" must be a valid boolean value.');
         }
 
-        return new self(all: $parsedAll);
+        $this->all = $parsedAll;
     }
 }

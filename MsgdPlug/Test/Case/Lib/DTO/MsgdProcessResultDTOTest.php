@@ -29,8 +29,8 @@ final class MsgdProcessResultDTOTest extends TestCase
      */
     public function testFromArraySuccess(): void
     {
-        $dto = MsgdProcessResultDTO::fromArray([
-            'new' => true,
+        $dto = new MsgdProcessResultDTO([
+            'is_new' => true,
             'has_blueprint' => true,
             'sharing_group_id' => 10,
             'sharing_group_name' => 'Test Group',
@@ -49,8 +49,8 @@ final class MsgdProcessResultDTOTest extends TestCase
      */
     public function testFromArrayHandlesFalseValues(): void
     {
-        $dto = MsgdProcessResultDTO::fromArray([
-            'new' => false,
+        $dto = new MsgdProcessResultDTO([
+            'is_new' => false,
             'has_blueprint' => false,
             'sharing_group_id' => 20,
             'sharing_group_name' => 'Existing Group',
@@ -68,7 +68,7 @@ final class MsgdProcessResultDTOTest extends TestCase
      */
     public function testFromArrayUsesDefaults(): void
     {
-        $dto = MsgdProcessResultDTO::fromArray([]);
+        $dto = new MsgdProcessResultDTO([]);
 
         $this->assertFalse($dto->isNew);
         $this->assertFalse($dto->hasBlueprint);
@@ -83,8 +83,8 @@ final class MsgdProcessResultDTOTest extends TestCase
      */
     public function testFromArrayCastsScalarValues(): void
     {
-        $dto = MsgdProcessResultDTO::fromArray([
-            'new' => 1,
+        $dto = new MsgdProcessResultDTO([
+            'is_new' => 1,
             'has_blueprint' => 0,
             'sharing_group_id' => '42',
             'sharing_group_name' => 'Group',
@@ -102,7 +102,7 @@ final class MsgdProcessResultDTOTest extends TestCase
      */
     public function testFromArraySanitizesSharingGroupName(): void
     {
-        $dto = MsgdProcessResultDTO::fromArray([
+        $dto = new MsgdProcessResultDTO([
             'sharing_group_name' => '<script>alert(1)</script>Group',
         ]);
 
@@ -120,10 +120,12 @@ final class MsgdProcessResultDTOTest extends TestCase
     public function testDirectConstructorInstantiation(): void
     {
         $dto = new MsgdProcessResultDTO(
-            isNew: true,
-            hasBlueprint: false,
-            sharingGroupId: 15,
-            sharingGroupName: 'Group'
+            [
+                'is_new' => true,
+                'has_blueprint' => false,
+                'sharing_group_id' => 15,
+                'sharing_group_name' => 'Group',
+            ]
         );
 
         $this->assertTrue($dto->isNew);
