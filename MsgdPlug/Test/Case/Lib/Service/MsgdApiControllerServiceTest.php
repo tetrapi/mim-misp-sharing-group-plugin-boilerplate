@@ -308,7 +308,7 @@ final class MsgdApiControllerServiceTest extends TestCase
 
         $this->assertTrue(
             $this->createService($sgLib, $bpLib)
-                ->checkBlueprint($this->createUser(), $payload)
+                ->isBlueprint($this->createUser(), $payload)
         );
     }
 

@@ -178,7 +178,7 @@ class MsgdApiControllerService
      *
      * @throws InvalidArgumentException|RuntimeException
      */
-    public function checkBlueprint(MsgdUserDTO $user, MsgdCheckBlueprintDTO $payload): bool
+    public function isBlueprint(MsgdUserDTO $user, MsgdCheckBlueprintDTO $payload): bool
     {
         $mirrors = $this->sgLib->getMirrorGroups($user, $payload->groups);
 

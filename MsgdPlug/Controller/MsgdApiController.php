@@ -223,7 +223,7 @@ class MsgdApiController extends MsgdPlugAppController
                 $this->msgdService->isUsingIds()
             );
 
-            $exists = $this->msgdService->checkBlueprint($user, $requestData);
+            $exists = $this->msgdService->isBlueprint($user, $requestData);
 
             return $this->buildJsonResponse($this->appendNextToken([
                 'status' => 'success',
