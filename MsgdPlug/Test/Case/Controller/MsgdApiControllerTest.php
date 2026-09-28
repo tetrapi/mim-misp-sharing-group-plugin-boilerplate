@@ -510,7 +510,7 @@ final class MsgdApiControllerTest extends TestCase
 
         /** @var InvocationMocker $expectation2 */
         $expectation2 = $serviceMock->expects($this->once());
-        $expectation2->method('checkBlueprint')
+        $expectation2->method('isBlueprint')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 $this->isInstanceOf(MsgdCheckBlueprintDTO::class)
@@ -647,7 +647,7 @@ final class MsgdApiControllerTest extends TestCase
 
         /** @var InvocationMocker $expectation */
         $expectation = $serviceMock->expects($this->once());
-        $expectation->method('checkBlueprint')
+        $expectation->method('isBlueprint')
             ->with(
                 $this->isInstanceOf(MsgdUserDTO::class),
                 $this->isInstanceOf(MsgdCheckBlueprintDTO::class)

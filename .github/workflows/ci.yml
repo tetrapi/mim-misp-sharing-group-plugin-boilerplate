@@ -138,7 +138,7 @@ jobs:
       - name: Run PHPUnit
         run: |
           cd /var/www/MISP/app
-          ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*Test.php")
+          ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*.php")
 
   # ==============================================================================
   # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
