@@ -64,7 +64,7 @@ class MsgdSharingGroupVoter
      *
      * @return bool
      */
-    public function canUseSharingGroups(MsgdUserDTO $user): bool
+    private function canUseSharingGroups(MsgdUserDTO $user): bool
     {
         if ($user->isSiteAdmin || $user->canUseSharingGroups) {
             return true;
