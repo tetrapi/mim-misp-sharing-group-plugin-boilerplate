@@ -1,0 +1,9 @@
+/.idea
+/ssl
+/logs
+/gnupg
+/configs
+/files
+/custom
+/.misp-stubs
+.env

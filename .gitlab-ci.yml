@@ -1,0 +1,194 @@
+image: docker:latest
+
+stages:
+  - test
+  - integration
+  - security
+  - sbom
+
+variables:
+  DS_MAX_DEPTH: "-1"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# ==============================================================================
+# INCLUDES: Official GitLab Security Templates
+# ==============================================================================
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+
+.sast-analyzer:
+  stage: security
+  needs: []
+
+.secret-analyzer:
+  stage: security
+  needs: []
+
+.dependency-scanning-analyzer:
+  stage: security
+  needs: []
+
+secret_detection:
+  stage: security
+  needs: []
+
+sast:
+  stage: security
+  needs: []
+
+dependency_scanning:
+  stage: security
+  needs: []
+
+# ==============================================================================
+# STAGE 1: test - Code Quality, Linters & Formatting
+# ==============================================================================
+
+shellcheck:
+  stage: test
+  image: koalaman/shellcheck-alpine:latest
+  needs: []
+  script:
+    - shellcheck dev.sh msgd_installer.sh
+
+linting-psr12:
+  stage: test
+  image: registry.gitlab.com/pipeline-components/php-codesniffer:latest
+  needs: []
+  script:
+    - phpcs -s -p --colors --extensions=php --standard=.phpcs.xml MsgdPlug/
+
+phpstan:
+  stage: test
+  image:
+    name: ghcr.io/phpstan/phpstan:latest
+    entrypoint: [""]
+  needs: []
+  before_script:
+    - mkdir -p .misp-stubs
+    - apk add --no-cache git composer
+    - git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git MISP-main
+    - cd MISP-main/app
+    - composer install --ignore-platform-reqs --no-interaction
+    - cd ../../
+    - cp -r MISP-main/app/Model MISP-main/app/Lib MISP-main/app/Vendor .misp-stubs/
+  script:
+    - phpstan analyse -c phpstan.neon
+
+eslint-js:
+  stage: test
+  image: node:latest
+  needs: []
+  variables:
+    ESLINT_USE_FLAT_CONFIG: "false"
+  script:
+    - npx eslint@8 MsgdPlug/webroot/js/
+
+yamllint:
+  stage: test
+  image: registry.gitlab.com/pipeline-components/yamllint:latest
+  needs: []
+  script:
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
+
+prettier:
+  stage: test
+  image: node:latest
+  needs: []
+  script:
+    - npx prettier --check MsgdPlug/webroot/js/
+
+# ==============================================================================
+# STAGE 2: security - SAST, Secrets & Infrastructure Scanning
+# ==============================================================================
+
+php-security-checker:
+  stage: security
+  image: registry.gitlab.com/pipeline-components/php-security-checker:latest
+  needs: []
+  script:
+    - if [ -f composer.lock ]; then security-checker security:check composer.lock; else echo "composer.lock not found, skipping."; fi
+
+iac-config-scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: []
+  script:
+    - trivy config --file-patterns "docker-compose:docker-compose-dev.yml" --exit-code 0 --severity HIGH,CRITICAL,MEDIUM --format json -o trivy-iac-report.json .
+    - trivy config --file-patterns "docker-compose:docker-compose-dev.yml" --exit-code 0 --severity HIGH,CRITICAL,MEDIUM .
+  artifacts:
+    when: always
+    paths:
+      - trivy-iac-report.json
+
+phpunit:
+  stage: integration
+  image: php:8.2-cli
+  services:
+    - name: mysql:8.0
+      alias: db
+  variables:
+    MYSQL_DATABASE: misp_test
+    MYSQL_ROOT_PASSWORD: root
+  needs: []
+  before_script:
+    - apt-get update && apt-get install -y git unzip
+    - docker-php-ext-install pdo pdo_mysql
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+    - git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git /var/www/MISP
+
+    - mkdir -p /var/www/MISP/app/Plugin
+    - cp -a MsgdPlug /var/www/MISP/app/Plugin/
+
+    - cd /var/www/MISP/app
+    - composer install --ignore-platform-reqs --no-interaction
+
+    - cp Config/core.default.php Config/core.php
+    - cp Config/bootstrap.default.php Config/bootstrap.php
+    - |
+      cat <<EOF > Config/database.php
+      <?php
+      class DATABASE_CONFIG {
+          public \$default = array('datasource' => 'Database/Mysql', 'host' => 'db', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+          public \$test = array('datasource' => 'Database/Mysql', 'host' => 'db', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+      }
+      EOF
+  script:
+    - ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
+
+# ==============================================================================
+# STAGE 4: sbom - EU CRA Software Inventory Generation
+# ==============================================================================
+
+generate-sbom:
+  stage: sbom
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: []
+  before_script:
+    - wget -qO- https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+  script:
+    - syft dir:. -o cyclonedx-json=gl-sbom-plugin.cdx.json
+    - syft dir:. -o spdx-json=sbom-plugin.spdx.json
+    - trivy fs --scanners vuln,license --format cyclonedx -o gl-sbom-vulnerabilities.cdx.json .
+    - trivy fs --scanners vuln --exit-code 1 --severity CRITICAL .
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - gl-sbom-plugin.cdx.json
+      - sbom-plugin.spdx.json
+      - gl-sbom-vulnerabilities.cdx.json
+    reports:
+      cyclonedx: ["gl-sbom-plugin.cdx.json", "gl-sbom-vulnerabilities.cdx.json"]
