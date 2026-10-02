@@ -1,0 +1,233 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ==============================================================================
+  # STAGE 1: test - Code Quality, Linters & Formatting
+  # ==============================================================================
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          additional_files: "dev.sh msgd_installer.sh"
+
+  linting-psr12:
+    name: PSR-12 CodeSniffer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: phpcs
+      - name: Run PHPCS
+        run: phpcs -s -p --colors --extensions=php --standard=.phpcs.xml MsgdPlug/
+
+  phpstan:
+    name: PHPStan Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: phpstan, composer
+      - name: Prepare MISP Stubs
+        run: |
+          mkdir -p .misp-stubs
+          git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git MISP-main
+          cd MISP-main/app
+          composer install --ignore-platform-reqs --no-interaction
+          cd ../../
+          cp -r MISP-main/app/Model MISP-main/app/Lib MISP-main/app/Vendor .misp-stubs/
+      - name: Run PHPStan
+        run: phpstan analyse -c phpstan.neon
+
+  eslint-js:
+    name: ESLint JS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+      - name: Run ESLint
+        env:
+          ESLINT_USE_FLAT_CONFIG: "false"
+        run: npx eslint@8 MsgdPlug/webroot/js/
+
+  yamllint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_data: "{extends: relaxed, rules: {line-length: disable}}"
+
+  prettier:
+    name: Prettier JS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+      - name: Run Prettier Check
+        run: npx prettier --check MsgdPlug/webroot/js/
+
+  # ==============================================================================
+  # STAGE 2: integration - Unit Testing
+  # ==============================================================================
+
+  phpunit:
+    name: PHPUnit Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: misp_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo, pdo_mysql
+          tools: composer
+      - name: Setup MISP Test Environment
+        run: |
+          sudo mkdir -p /var/www/MISP
+          sudo chown -R $USER:$USER /var/www/MISP
+          git clone -b 2.5 --depth 1 --recurse-submodules --shallow-submodules https://github.com/MISP/MISP.git /var/www/MISP
+          mkdir -p /var/www/MISP/app/Plugin
+          cp -a MsgdPlug /var/www/MISP/app/Plugin/
+          cd /var/www/MISP/app
+          composer install --ignore-platform-reqs --no-interaction
+          cp Config/core.default.php Config/core.php
+          cp Config/bootstrap.default.php Config/bootstrap.php
+          cat <<EOF > Config/database.php
+          <?php
+          class DATABASE_CONFIG {
+              public \$default = array('datasource' => 'Database/Mysql', 'host' => '127.0.0.1', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+              public \$test = array('datasource' => 'Database/Mysql', 'host' => '127.0.0.1', 'login' => 'root', 'password' => 'root', 'database' => 'misp_test', 'prefix' => '', 'encoding' => 'utf8');
+          }
+          EOF
+      - name: Run PHPUnit
+        run: |
+          cd /var/www/MISP/app
+          ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*.php")
+
+  # ==============================================================================
+  # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
+  # ==============================================================================
+
+  php-security-checker:
+    name: PHP Security Checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Composer Lock Security
+        run: |
+          if [ -f composer.lock ]; then
+            npx dlx local-php-security-checker
+          else
+            echo "composer.lock not found, skipping."
+          fi
+
+  iac-config-scan:
+    name: Trivy IaC Config Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy IaC Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          output: "trivy-iac-report.json"
+          format: "json"
+          exit-code: "0"
+          severity: "HIGH,CRITICAL,MEDIUM"
+      - name: Run Trivy IaC Stdout
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          exit-code: "0"
+          severity: "HIGH,CRITICAL,MEDIUM"
+      - name: Upload Trivy Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-iac-report
+          path: trivy-iac-report.json
+
+  secret-detection:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==============================================================================
+  # STAGE 4: sbom - EU CRA Software Inventory Generation
+  # ==============================================================================
+
+  generate-sbom:
+    name: Generate SBOM & License Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Syft
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      - name: Generate CycloneDX and SPDX SBOM
+        run: |
+          syft dir:. -o cyclonedx-json=gl-sbom-plugin.cdx.json
+          syft dir:. -o spdx-json=sbom-plugin.spdx.json
+      - name: Scan Vulnerabilities with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "cyclonedx"
+          output: "gl-sbom-vulnerabilities.cdx.json"
+      - name: Fail on Critical Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          exit-code: "1"
+          severity: "CRITICAL"
+      - name: Upload SBOM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-reports
+          path: |
+            gl-sbom-plugin.cdx.json
+            sbom-plugin.spdx.json
+            gl-sbom-vulnerabilities.cdx.json
+          retention-days: 30
