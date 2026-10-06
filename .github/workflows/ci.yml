@@ -138,7 +138,7 @@ jobs:
       - name: Run PHPUnit
         run: |
           cd /var/www/MISP/app
-          ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php $(find /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/ -name "*.php")
+          ./Vendor/bin/phpunit --bootstrap /var/www/MISP/app/Lib/cakephp/lib/Cake/Test/bootstrap.php /var/www/MISP/app/Plugin/MsgdPlug/Test/Case/
 
   # ==============================================================================
   # STAGE 3: security - SAST, Secrets & Infrastructure Scanning
@@ -190,10 +190,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Gitleaks Secret Scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install & Run Gitleaks CLI
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          tar -zxvf gitleaks_8.21.2_linux_x64.tar.gz
+          ./gitleaks detect --source . -v
 
   # ==============================================================================
   # STAGE 4: sbom - EU CRA Software Inventory Generation
