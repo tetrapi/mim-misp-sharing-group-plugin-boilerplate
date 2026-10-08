@@ -1,20 +1,20 @@
-# Changelog 📋
+# Changelog
 
 ---
 
 ## v1.0.1 - 2026-10-08
 
-### 🚀 Added
+### Added
 - Full PHP `>= 8.1` support.
 
 ### ⚡ Changed
 - Removed `readonly` class modifiers to ensure PHP 8.1 compatibility (class-level `readonly` requires PHP 8.2+).
 
 ---
-
+k
 ## v1.0.0 - 2026-09-30
 
-### 🚀 Added
+### Added
 - Initial release of **MsgdPlug** for MISP.
 - Client-side UI injection for MISP views (`Add`, `Edit`, `View`, `Index`).
 - Dynamic **Sharing Group Blueprints** evaluation without schema changes.
