@@ -7,11 +7,11 @@
 ### Added
 - Full PHP `>= 8.1` support.
 
-### ⚡ Changed
+### Changed
 - Removed `readonly` class modifiers to ensure PHP 8.1 compatibility (class-level `readonly` requires PHP 8.2+).
 
 ---
-k
+
 ## v1.0.0 - 2026-09-30
 
 ### Added
