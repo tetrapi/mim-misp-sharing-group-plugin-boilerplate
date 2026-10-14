@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/License-AGPL%203.0-blue?style=flat-square)](LICENSE)
 
-[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.2-777BB4?logo=php&logoColor=white&style=flat-square)](https://www.php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.1-777BB4?logo=php&logoColor=white&style=flat-square)](https://www.php.net)
 
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%2010-brightgreen?logo=php&logoColor=white&style=flat-square)](phpstan.neon)
 
@@ -20,6 +20,9 @@
 [![MISP Repository](https://img.shields.io/badge/Go%20to-MISP%20Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MISP/MISP)
 
 ![Demo preview](images/demo1.gif)
+
+> [!NOTE]
+> Currently, this plugin only works with the base MISP UI.
 
 ---
 
